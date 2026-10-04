@@ -7,7 +7,34 @@
 - **Бэкенд:** Nakama + Postgres (Docker Compose локально, Heroic Cloud или VPS в продакшне).
 - **Сетевой матч:** детерминированная симуляция + rollback (`godot-rollback-netcode`), Nakama работает как relay.
 
-## 2. Главный принцип
+## 2. Структура проекта и подходы (как в `GGamezebo/quizmatik`)
+Технические подходы берём из quizmatik (`.cursor/rules` там) и адаптируем под онлайн-симуляцию.
+
+| Путь | Роль |
+|---|---|
+| `main.tscn` → `src/game/main.gd` | Запуск HFSM приложения |
+| `src/game/hfsm/app_hfsm.json` | Фазы приложения: `App` → `Menu` / `Battle` / `PostBattle`, контекст `WEB` |
+| `src/game/scenes/{app_root,menu,game,post_battle}` | Экраны — только оркестрация (`IScene`: `initialize` / `deinit` / `on_event`) |
+| `src/features/{name}/` | Изолированные фичи: `volley_sim` (+`buffs/`), `blob_view`, `ball_view`, `buff_fx`, `online`, `virtual_controls`, `ai_opponent` |
+| `src/common/` | Общие ресурсы: пресеты физики, арены, правила, персонажи, `MatchSetup` |
+| `src/ui/` | Общие виджеты (кнопки, диалоги, загрузка) |
+| `src/game/account/` | Прогресс, статистика, сохранения |
+| `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `fsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `shackers` (берём из quizmatik) |
+| `addons/` | `hfsm_editor`, `GodotSavesAddon`, Nakama, `godot-rollback-netcode` |
+| `server/`, `tests/`, `tools/`, `concept/` | Сервер, headless-тесты, генераторы, арты |
+
+**Принципы из quizmatik:**
+- **Изоляция фич:** всё нужное фиче лежит в её папке, наружу выходят только сигналы `ev_*` и `initialize`/`setup`. Фичи не лезут во внутренности друг друга, сцены их компонуют.
+- **Каждая сцена запускается отдельно (F6):** значения по умолчанию лежат в `.tres`. Родитель подменяет их при запуске: событие → `initialize(data)` → `ResourceUtils.update_resource`.
+- **События — ресурсы `RootEvents` / `GameEvents`, а не автолоады.** Подписки через `EventListener`, отписка в `deinit`. Единственное исключение — автолоад `SyncManager` у rollback-аддона.
+- **UI собирается в редакторе**, повторяющиеся элементы — шаблоны `.tscn`. Окна меню идут через `WindowStackManager`, диалоги — поверх него.
+- **`class_name` и `@export` вместо жёстких путей `res://`.**
+- **Mobile + Steam + HTML5 с первого дня:** тач и клавиатура/геймпад, платформенный код в маленьких хелперах `OS.has_feature`.
+- **Сохранения:** `SaveManager` через `RootEvents.ev_save_progress`, с задержкой и не во время боя.
+
+**Отличие от quizmatik:** правила матча (подача, розыгрыш, очко, конец) живут **внутри детерминированной симуляции**, а не в отдельной FSM `GameManager`. Иначе rollback не сможет их откатывать. Сцена `game` только собирает симуляцию, сессию, отображение и HUD.
+
+## 2.1 Главный принцип
 **Клиент отправляет только ввод. Игру считает одна чистая детерминированная симуляция.**
 Все режимы (против AI, вдвоём на одном ПК, онлайн) и будущий авторитарный сервер используют один и тот же код игры. Различается только то, откуда приходит ввод и где запущена главная копия симуляции.
 
@@ -57,7 +84,7 @@ MatchSession: Local | Rollback(relay) | Authoritative(позже)
 ## 7. Отображение
 - Блоб: кольцо из 16–24 точек на пружинах, гладкий контур, блик, обводка.
 - Glow: `WorldEnvironment` + 2D HDR. **Проверить работу в Compatibility на Godot 4.7.** Если не работает, используем additive-ореолы спрайтами.
-- Визуал каждого бафа лежит в `src/view/fx/<buff_id>`.
+- Визуал каждого бафа лежит в `src/features/buff_fx/<buff_id>/`, логика — в `src/features/volley_sim/buffs/<buff_id>.gd`.
 
 ## 8. Сеть
 ### Сессии
@@ -90,7 +117,8 @@ MatchSession: Local | Rollback(relay) | Authoritative(позже)
 ## 10. Что взять из старых веток
 | Источник | Что |
 |---|---|
-| `prototype-3d` | `core/lib` (hfsm, fsm), `addons/` (nakama, rollback, saves), `server/` (модули Nakama), `concepts/ART_DIRECTION.md` |
+| `GGamezebo/quizmatik` | `core/lib` (свежие `hfsm`, `fsm`, `shackers`, `window_stack_manager`), `addons/hfsm_editor`, `GodotSavesAddon`, каркас `main.gd` + `app_root` + `SaveManager`, `core/theme` как образец |
+| `prototype-3d` | `addons/` (nakama, rollback), `server/` (модули Nakama), `core/lib/performance_tune.gd` |
 | `claude/mobile-game-build-run-le59yg` | `src/features/volley_sim/volley_sim.gd`, `online_rollback.gd`, `rollback_input.gd`, `tests/`, CI Android APK |
 
 ## 11. Тесты

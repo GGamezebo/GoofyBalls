@@ -5,7 +5,7 @@
 | # | Этап | Результат |
 |---|---|---|
 | 0 | Документация и концепты | `docs/`, `concept/`, `.claude/rules` ✅ |
-| 1 | Каркас проекта | Godot 4.7 2D, рендерер Compatibility, `core/lib` и `addons/` из `prototype-3d`, headless-тесты, CI. **Проверка glow в Compatibility.** |
+| 1 | Каркас проекта по образцу quizmatik | Godot 4.7 2D; `core/lib`, `hfsm_editor`, `GodotSavesAddon` из quizmatik; `main.gd` + `app_hfsm.json` + `app_root` (RootEvents, SaveManager); пустые сцены menu/game/post_battle, каждая запускается по F6; headless-тесты, CI. **Проверка glow в Compatibility.** |
 | 2 | Ядро симуляции | `MatchSetup`, пресеты, N игроков и команд, правила `TwoTeamPoints` и `MultiZoneLives`, тесты детерминизма |
 | 3 | Система эффектов | `Modifier`, `BuffBase`, `BuffRegistry`, `EnvDirector`, `self_destruct`; первые бафы: гигант, портал, супер-нога; пассивки прыгуна и толстяка; события: луна, сетка, переворот, НЛО, ускорение |
 | 4 | Отображение | Желейный блоб, glow, эффекты камеры, HUD, тач-управление (3 кнопки) |
