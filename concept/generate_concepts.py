@@ -59,22 +59,37 @@ def eyes(x, y, r, mood, look=0.0):
         out.append(f"<path d='M{x-r*0.15},{my+r*0.05} Q{x},{my-r*0.05} {x+r*0.15},{my+r*0.05}' stroke='#0A0F25' stroke-width='{r*0.05}' fill='none'/>")
     return "".join(out)
 
-def blob(x, y, r, col, mood="happy", sx=1.0, sy=1.0, look=0.0, dent=0.0, glow=True, opacity=1.0):
-    """(x,y) = point on floor under blob centre."""
+def blob(x, y, r, col, mood="happy", sx=1.0, sy=1.0, look=0.0, dent=0.0, glow=True, opacity=1.0,
+         ground=True, floor_y=None):
+    """Round slime ball. (x, y) = lowest point of the blob. Default shape is a circle,
+    slightly flattened when resting on the floor; sx/sy squash & stretch (keep sx*sy ~ 1)."""
     cname = {v: k for k, v in C.items()}.get(col, "cyan")
-    w = r * sx; h = r * 1.15 * sy
-    d = (f"M{x-w},{y-h*0.08} C{x-w},{y-h*0.85} {x-w*0.55},{y-h*1.05} {x},{y-h*1.05+dent*h} "
-         f"C{x+w*0.55},{y-h*1.05} {x+w},{y-h*0.85} {x+w},{y-h*0.08} "
-         f"C{x+w},{y+h*0.02} {x+w*0.8},{y+h*0.04} {x},{y+h*0.04} C{x-w*0.8},{y+h*0.04} {x-w},{y+h*0.02} {x-w},{y-h*0.08} Z")
+    if ground:
+        sy *= 0.93
+    w = r * sx; hh = r * sy
+    cx, cy = x, y - hh
+    k = 0.5523; kb = k + (0.22 if ground else 0.0)  # flatter bottom when touching the floor
+    top = cy - hh + dent * hh * 2
+    d = (f"M{cx-w},{cy} C{cx-w},{cy-hh*k} {cx-w*k},{top} {cx},{top} "
+         f"C{cx+w*k},{top} {cx+w},{cy-hh*k} {cx+w},{cy} "
+         f"C{cx+w},{cy+hh*kb} {cx+w*kb},{cy+hh} {cx},{cy+hh} "
+         f"C{cx-w*kb},{cy+hh} {cx-w},{cy+hh*kb} {cx-w},{cy} Z")
     f = " filter='url(#glow)'" if glow else ""
+    fy = y if floor_y is None else floor_y
+    shadow_k = max(0.25, 1.0 - (fy - y) / (r * 5.0))
+    re = r * min(1.0, (sx + sy) / 2)
     out = [f"<g opacity='{opacity}'>",
-           f"<ellipse cx='{x}' cy='{y+h*0.06}' rx='{w*0.95}' ry='{r*0.12}' fill='#000' opacity='0.45'/>",
+           f"<ellipse cx='{x}' cy='{fy+r*0.05}' rx='{w*0.9*shadow_k}' ry='{r*0.1*shadow_k}' fill='#000' opacity='{0.5*shadow_k:.2f}'/>",
            f"<path d='{d}' fill='url(#g_{cname})' stroke='{lighten(col,0.35)}' stroke-width='{r*0.07}'{f}/>",
-           f"<ellipse cx='{x-w*0.42}' cy='{y-h*0.78}' rx='{w*0.2}' ry='{h*0.1}' fill='white' opacity='0.75' transform='rotate(-25 {x-w*0.42} {y-h*0.78})'/>",
-           f"<circle cx='{x-w*0.18}' cy='{y-h*0.9}' r='{r*0.05}' fill='white' opacity='0.8'/>",
-           eyes(x, y - h * 0.15 + r * 0.15 * (1 - sy), r * min(1.0, (sx + sy) / 2) , mood, look),
+           f"<ellipse cx='{cx-w*0.42}' cy='{cy-hh*0.52}' rx='{w*0.22}' ry='{hh*0.12}' fill='white' opacity='0.75' transform='rotate(-35 {cx-w*0.42} {cy-hh*0.52})'/>",
+           f"<circle cx='{cx-w*0.12}' cy='{cy-hh*0.72}' r='{r*0.05}' fill='white' opacity='0.8'/>",
+           eyes(cx, cy - hh * 0.05 + re * 0.42, re, mood, look),
            "</g>"]
     return "".join(out)
+
+def dust(x, y, s=1.0):
+    return "".join(f"<circle cx='{x+dx*s}' cy='{y-dy*s}' r='{rr*s}' fill='#B8C4E8' opacity='0.35'/>"
+                   for dx, dy, rr in ((-55, 8, 10), (-35, 18, 7), (40, 10, 9), (60, 22, 6), (-70, 25, 5)))
 
 def ball(x, y, r, trail=None):
     out = []
@@ -116,7 +131,7 @@ def stars(w, h, n=60, seed=3):
 
 def court(x0, x1, floor_y, ceil_y, nets, colA=None):
     out = [f"<rect x='{x0}' y='{floor_y}' width='{x1-x0}' height='14' fill='{C['floor']}'/>",
-           f"<line x1='{x0}' y1='{floor_y}' x2='{x1}' y2='{floor_y}' stroke='{C['cyan']}' stroke-width='3' filter='url(#glow)' opacity='0.9'/>",
+           f"<rect x='{x0}' y='{floor_y-2}' width='{x1-x0}' height='4' fill='{C['cyan']}' filter='url(#glow)' opacity='0.9'/>",
            f"<rect x='{x0}' y='{ceil_y}' width='{x1-x0}' height='{floor_y-ceil_y}' fill='none' stroke='{C['cyan']}' stroke-width='2' opacity='0.25' rx='6'/>"]
     for nx, nh in nets:
         out.append(f"<rect x='{nx-4}' y='{floor_y-nh}' width='8' height='{nh}' fill='{lighten(C['cyan'],0.6)}' filter='url(#glow)' rx='4'/>")
@@ -161,7 +176,7 @@ def sheet_blobs():
         else:
             b.append(blob(x, y2, 75, C['cyan'], mood, sx, sy, dent=dent))
             if n == "удар мячом":
-                b.append(ball(x + 15, y2 - 75 * 1.15 * 0.95 - 30, 30))
+                b.append(ball(x + 10, y2 - 133, 30))
             if n == "прыжок":
                 b.append(f"<path d='M{x-70},{y2-40} l0,30 M{x+70},{y2-40} l0,30 M{x-55},{y2-110} l0,22 M{x+55},{y2-110} l0,22' stroke='{C['cyan']}' stroke-width='4' opacity='0.5' stroke-linecap='round'/>")
         b.append(text(x, y2 + 50, n, 22, C['sub'], weight="normal"))
@@ -204,9 +219,9 @@ def sheet_gameplay():
     b.append(f"<g filter='url(#glow)' opacity='0.85'><ellipse cx='{ux}' cy='{uy}' rx='70' ry='20' fill='#3a3f5a' stroke='{C['lime']}' stroke-width='3'/><ellipse cx='{ux}' cy='{uy-14}' rx='32' ry='22' fill='{C['lime']}' opacity='0.5'/></g>")
     b.append(f"<polygon points='{ux-30},{uy+18} {ux+30},{uy+18} {ux+90},{floor} {ux-90},{floor}' fill='{C['lime']}' opacity='0.07'/>")
     # players
-    b.append(blob(430, floor, 80, C['cyan'], "angry", 0.9, 1.15, look=1))
-    b.append(f"<path d='M400,{floor+5} l-20,0 M420,{floor+5} l-25,0' stroke='{C['cyan']}' opacity='0.4' stroke-width='4'/>")
-    b.append(blob(1150, floor, 80, C['mag'], "scared", 1.1, 0.95, look=-1))
+    b.append(blob(500, floor - 190, 66, C['cyan'], "angry", 0.9, 1.12, look=1, ground=False, floor_y=floor))
+    b.append(f"<path d='M478,{floor-170} l0,45 M500,{floor-174} l0,60 M522,{floor-170} l0,45' stroke='{C['cyan']}' opacity='0.35' stroke-width='4' stroke-linecap='round'/>")
+    b.append(blob(1150, floor, 66, C['mag'], "scared", look=-1))
     b.append(ball(640, 360, 34, trail=(-22, 18)))
     # pickups
     b.append(pickup(260, 470, "🍄")); b.append(pickup(1000, 420, "🌀"))
@@ -312,6 +327,59 @@ def sheet_multiteam():
     b.append(text(800, 750, "в командах 2 · 1 · 2 игрока — состав может быть любым", 22, C['sub'], weight="normal"))
     save("multi-team", svg(W, H, "".join(b)))
 
-for f in (sheet_blobs, sheet_gameplay, sheet_buffs, sheet_storyboard, sheet_multiteam):
+
+# ---------- 6. jump sequence ----------
+def sheet_jump():
+    W, H = 1800, 1250
+    b = [stars(W, H, 50), text(W/2, 64, "Прыжок: покадрово", 44),
+         text(W/2, 102, "блоб по умолчанию — круглый шарик · тянется и сплющивается, сохраняя объём", 22, C['sub'], weight="normal")]
+    fl = 640; R = 62
+    b.append(f"<rect x='40' y='{fl}' width='{W-80}' height='4' fill='{C['cyan']}' opacity='0.7' filter='url(#glow)'/>")
+    frames = [  # x, lift (bottom above floor), sx, sy, ground, mood, label
+        (130, 0, 1.0, 1.0, True, "happy", "1. покой"),
+        (380, 0, 1.3, 0.72, True, "angry", "2. присед"),
+        (630, 25, 0.74, 1.38, False, "angry", "3. отрыв"),
+        (880, 230, 0.9, 1.12, False, "happy", "4. подъём"),
+        (1130, 330, 1.0, 1.0, False, "smug", "5. пик"),
+        (1380, 200, 0.88, 1.15, False, "scared", "6. падение"),
+        (1630, 0, 1.5, 0.58, True, "dead", "7. приземление"),
+    ]
+    pts = " ".join(f"{fx},{fl-lift-R*sy}" for fx, lift, sx, sy, g, m, l in frames)
+    b.append(f"<polyline points='{pts}' fill='none' stroke='{C['ball']}' stroke-width='3' stroke-dasharray='8 10' opacity='0.45'/>")
+    for fx, lift, sx, sy, g, mood, label in frames:
+        mood = "happy" if mood == "dead" else mood
+        b.append(blob(fx, fl - lift, R, C['cyan'], mood, sx, sy, look=0.6, ground=g, floor_y=fl))
+        b.append(text(fx, fl + 52, label, 22, C['text'], weight="normal"))
+    b.append(dust(630, fl)); b.append(dust(1630, fl, 1.3))
+    b.append(text(1630, fl + 84, "→ отскок и колыхание", 18, C['sub'], weight="normal"))
+    for fx, lift in ((630, 25), (880, 230)):
+        yb = fl - lift
+        b.append(f"<path d='M{fx-22},{yb+18} l0,40 M{fx},{yb+14} l0,55 M{fx+22},{yb+18} l0,40' stroke='{C['cyan']}' stroke-width='4' opacity='0.35' stroke-linecap='round'/>")
+    # row 2: hit in the air
+    fl2 = 1150; R2 = 62; lift = 110
+    b.append(text(60, 800, "УДАР МЯЧОМ В ПРЫЖКЕ", 24, C['mag'], anchor="start"))
+    b.append(f"<rect x='40' y='{fl2}' width='{W-80}' height='4' fill='{C['mag']}' opacity='0.7' filter='url(#glow)'/>")
+    def top_of(sx, sy, dent):
+        hh = R2 * sy
+        return fl2 - lift - 2 * hh + dent * hh * 2
+    # 1. ball incoming from upper right
+    t = top_of(1.0, 1.0, 0)
+    b.append(blob(300, fl2 - lift, R2, C['mag'], "angry", 1.0, 1.0, look=0.5, ground=False, floor_y=fl2))
+    b.append(ball(370, t - 70, 30, trail=(-22, 20)))
+    # 2. contact: dent on top, blob squashed
+    t = top_of(1.18, 0.85, 0.14)
+    b.append(blob(900, fl2 - lift, R2, C['mag'], "scared", 1.18, 0.85, dent=0.14, ground=False, floor_y=fl2))
+    b.append(f"<ellipse cx='900' cy='{t - 24}' rx='34' ry='25' fill='url(#ballG)' filter='url(#glowBig)'/>")
+    b.append(f"<path d='M850,{t-10} l-22,-12 M950,{t-10} l22,-12 M900,{t-58} l0,-18' stroke='white' stroke-width='4' opacity='0.6' stroke-linecap='round'/>")
+    # 3. ball flies off, blob wobbles
+    t = top_of(0.92, 1.1, 0)
+    b.append(blob(1500, fl2 - lift, R2, C['mag'], "smug", 0.92, 1.1, look=1, ground=False, floor_y=fl2))
+    b.append(ball(1680, t - 40, 30, trail=(26, 20)))
+    b.append(f"<path d='M1420,{t+40} q-18,14 0,28 M1580,{t+40} q18,14 0,28' stroke='{C['mag']}' stroke-width='4' fill='none' opacity='0.55'/>")
+    for hx, label in ((300, "1. мяч летит на блоб"), (900, "2. касание: вмятина сверху"), (1500, "3. мяч отлетает, блоб колышется")):
+        b.append(text(hx, fl2 + 52, label, 22, C['text'], weight="normal"))
+    save("jump", svg(W, H, "".join(b)))
+
+for f in (sheet_jump, sheet_blobs, sheet_gameplay, sheet_buffs, sheet_storyboard, sheet_multiteam):
     f()
 print("ok")
