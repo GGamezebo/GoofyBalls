@@ -2,15 +2,141 @@
 
 [ext_resource type="Script" path="res://src/features/blob_view/blob_view.gd" id="1_blob"]
 
-[node name="BlobView" type="Node2D" node_paths=PackedStringArray("name_label")]
+[sub_resource type="Gradient" id="Gradient_shadow"]
+offsets = PackedFloat32Array(0, 0.8, 1)
+colors = PackedColorArray(0, 0, 0, 0.8, 0, 0, 0, 0.72, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
+gradient = SubResource("Gradient_shadow")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_halo"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_halo"]
+offsets = PackedFloat32Array(0, 0.8, 0.87, 0.96, 1)
+colors = PackedColorArray(1, 1, 1, 0.21, 1, 1, 1, 0.21, 1, 1, 1, 0.15, 1, 1, 1, 0.06, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_halo"]
+gradient = SubResource("Gradient_halo")
+width = 320
+height = 320
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_circle"]
+offsets = PackedFloat32Array(0, 0.97, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_circle"]
+gradient = SubResource("Gradient_circle")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_light"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(1, 1, 1, 0.51, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_light"]
+gradient = SubResource("Gradient_light")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.4, 0.35)
+fill_to = Vector2(0.72, 0.35)
+
+[node name="BlobView" type="Node2D" node_paths=PackedStringArray("body", "squash", "shadow", "pupils", "tinted", "tinted_light", "name_label")]
 script = ExtResource("1_blob")
+body = NodePath("Body")
+squash = NodePath("Body/Squash")
+shadow = NodePath("Shadow")
+pupils = [NodePath("Body/Squash/Art/EyeLeft/Pupil"), NodePath("Body/Squash/Art/EyeRight/Pupil")]
+tinted = [NodePath("Body/Squash/Art/Halo"), NodePath("Body/Squash/Art/Base")]
+tinted_light = [NodePath("Body/Squash/Art/Outline")]
 name_label = NodePath("NameLabel")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+position = Vector2(0, 128)
+scale = Vector2(0.95, 0.171)
+texture = SubResource("GradientTexture2D_shadow")
+
+[node name="Body" type="Node2D" parent="."]
+
+[node name="Squash" type="Node2D" parent="Body"]
+position = Vector2(0, 128)
+
+[node name="Art" type="Node2D" parent="Body/Squash"]
+position = Vector2(0, -128)
+
+[node name="Halo" type="Sprite2D" parent="Body/Squash/Art"]
+self_modulate = Color(0.0118, 0.7216, 1, 1)
+material = SubResource("CanvasItemMaterial_halo")
+texture = SubResource("GradientTexture2D_halo")
+
+[node name="Base" type="Sprite2D" parent="Body/Squash/Art"]
+self_modulate = Color(0.0118, 0.7216, 1, 1)
+texture = SubResource("GradientTexture2D_circle")
+
+[node name="Light" type="Sprite2D" parent="Body/Squash/Art"]
+texture = SubResource("GradientTexture2D_light")
+
+[node name="Outline" type="Line2D" parent="Body/Squash/Art"]
+self_modulate = Color(0.3577, 0.8190, 1, 1)
+points = PackedVector2Array(123.52, 0, 122.93, 12.11, 121.15, 24.1, 118.2, 35.86, 114.12, 47.27, 108.93, 58.23, 102.7, 68.62, 95.48, 78.36, 87.34, 87.34, 78.36, 95.48, 68.62, 102.7, 58.23, 108.93, 47.27, 114.12, 35.86, 118.2, 24.1, 121.15, 12.11, 122.93, 0, 123.52, -12.11, 122.93, -24.1, 121.15, -35.86, 118.2, -47.27, 114.12, -58.23, 108.93, -68.62, 102.7, -78.36, 95.48, -87.34, 87.34, -95.48, 78.36, -102.7, 68.62, -108.93, 58.23, -114.12, 47.27, -118.2, 35.86, -121.15, 24.1, -122.93, 12.11, -123.52, 0, -122.93, -12.11, -121.15, -24.1, -118.2, -35.86, -114.12, -47.27, -108.93, -58.23, -102.7, -68.62, -95.48, -78.36, -87.34, -87.34, -78.36, -95.48, -68.62, -102.7, -58.23, -108.93, -47.27, -114.12, -35.86, -118.2, -24.1, -121.15, -12.11, -122.93, -0, -123.52, 12.11, -122.93, 24.1, -121.15, 35.86, -118.2, 47.27, -114.12, 58.23, -108.93, 68.62, -102.7, 78.36, -95.48, 87.34, -87.34, 95.48, -78.36, 102.7, -68.62, 108.93, -58.23, 114.12, -47.27, 118.2, -35.86, 121.15, -24.1, 122.93, -12.11)
+closed = true
+width = 8.96
+antialiased = true
+
+[node name="Shine" type="Sprite2D" parent="Body/Squash/Art"]
+self_modulate = Color(1, 1, 1, 0.75)
+position = Vector2(-51.2, -64)
+rotation = -0.61
+scale = Vector2(0.22, 0.12)
+texture = SubResource("GradientTexture2D_circle")
+
+[node name="Sparkle" type="Sprite2D" parent="Body/Squash/Art"]
+self_modulate = Color(1, 1, 1, 0.8)
+position = Vector2(-15.36, -92.16)
+scale = Vector2(0.05, 0.05)
+texture = SubResource("GradientTexture2D_circle")
+
+[node name="EyeLeft" type="Node2D" parent="Body/Squash/Art"]
+position = Vector2(-38.4, -15.36)
+
+[node name="White" type="Sprite2D" parent="Body/Squash/Art/EyeLeft"]
+scale = Vector2(0.17, 0.22)
+texture = SubResource("GradientTexture2D_circle")
+
+[node name="Pupil" type="Sprite2D" parent="Body/Squash/Art/EyeLeft"]
+self_modulate = Color(0.0392, 0.0588, 0.1451, 1)
+scale = Vector2(0.09, 0.09)
+texture = SubResource("GradientTexture2D_circle")
+
+[node name="EyeRight" type="Node2D" parent="Body/Squash/Art"]
+position = Vector2(38.4, -15.36)
+
+[node name="White" type="Sprite2D" parent="Body/Squash/Art/EyeRight"]
+scale = Vector2(0.17, 0.22)
+texture = SubResource("GradientTexture2D_circle")
+
+[node name="Pupil" type="Sprite2D" parent="Body/Squash/Art/EyeRight"]
+self_modulate = Color(0.0392, 0.0588, 0.1451, 1)
+scale = Vector2(0.09, 0.09)
+texture = SubResource("GradientTexture2D_circle")
 
 [node name="NameLabel" type="Label" parent="."]
 offset_left = -120.0
-offset_top = -112.0
+offset_top = -192.0
 offset_right = 120.0
-offset_bottom = -76.0
+offset_bottom = -156.0
 theme_override_font_sizes/font_size = 24
 text = "ТЫ"
 horizontal_alignment = 1
