@@ -2,5 +2,121 @@
 
 [ext_resource type="Script" path="res://src/features/ball_view/ball_view.gd" id="1_ball"]
 
-[node name="BallView" type="Node2D"]
+[sub_resource type="Gradient" id="Gradient_shadow"]
+offsets = PackedFloat32Array(0, 0.75, 1)
+colors = PackedColorArray(0, 0, 0, 0.45, 0, 0, 0, 0.4, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
+gradient = SubResource("Gradient_shadow")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Curve" id="Curve_trail"]
+_data = [Vector2(0, 0.25), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_trail"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(1, 0.82, 0.04, 0, 1, 0.82, 0.04, 0.2)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_halo"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_halo"]
+offsets = PackedFloat32Array(0, 0.5, 0.6, 0.72, 1)
+colors = PackedColorArray(1, 0.82, 0.04, 0.25, 1, 0.82, 0.04, 0.22, 1, 0.82, 0.04, 0.14, 1, 0.82, 0.04, 0.06, 1, 0.82, 0.04, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_halo"]
+gradient = SubResource("Gradient_halo")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_base"]
+offsets = PackedFloat32Array(0, 0.96, 1)
+colors = PackedColorArray(1, 0.8235, 0.0392, 1, 1, 0.8235, 0.0392, 1, 1, 0.8235, 0.0392, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_base"]
+gradient = SubResource("Gradient_base")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_light"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(1, 0.9647, 0.7608, 0.95, 1, 0.9647, 0.7608, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_light"]
+gradient = SubResource("Gradient_light")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.38, 0.33)
+fill_to = Vector2(0.72, 0.33)
+
+[node name="BallView" type="Node2D" node_paths=PackedStringArray("body", "seams", "shadow", "trail")]
 script = ExtResource("1_ball")
+body = NodePath("Body")
+seams = NodePath("Body/Seams")
+shadow = NodePath("Shadow")
+trail = NodePath("Trail")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+position = Vector2(0, 110)
+scale = Vector2(1, 0.2)
+texture = SubResource("GradientTexture2D_shadow")
+
+[node name="Trail" type="Line2D" parent="."]
+top_level = true
+points = PackedVector2Array(-190, 46, -140, 26, -92, 12, -46, 3, 0, 0)
+width = 90.0
+width_curve = SubResource("Curve_trail")
+gradient = SubResource("Gradient_trail")
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="Body" type="Node2D" parent="."]
+
+[node name="Halo" type="Sprite2D" parent="Body"]
+material = SubResource("CanvasItemMaterial_halo")
+texture = SubResource("GradientTexture2D_halo")
+
+[node name="Base" type="Sprite2D" parent="Body"]
+texture = SubResource("GradientTexture2D_base")
+
+[node name="Light" type="Sprite2D" parent="Body"]
+texture = SubResource("GradientTexture2D_light")
+
+[node name="Seams" type="Node2D" parent="Body"]
+
+[node name="SeamA" type="Line2D" parent="Body/Seams"]
+points = PackedVector2Array(27.76, 37.6, 23.73, 34.01, 20.13, 30, 17, 25.6, 14.38, 20.88, 12.31, 15.89, 10.81, 10.71, 9.9, 5.39, 9.6, 0, 9.9, -5.39, 10.81, -10.71, 12.31, -15.89, 14.38, -20.88, 17, -25.6, 20.13, -30, 23.73, -34.01, 27.76, -37.6)
+width = 5.12
+default_color = Color(0.6902, 0.4824, 0, 0.6)
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="SeamB" type="Line2D" parent="Body/Seams"]
+points = PackedVector2Array(-27.76, -37.6, -23.73, -34.01, -20.13, -30, -17, -25.6, -14.38, -20.88, -12.31, -15.89, -10.81, -10.71, -9.9, -5.39, -9.6, -0, -9.9, 5.39, -10.81, 10.71, -12.31, 15.89, -14.38, 20.88, -17, 25.6, -20.13, 30, -23.73, 34.01, -27.76, 37.6)
+width = 5.12
+default_color = Color(0.6902, 0.4824, 0, 0.6)
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="Rim" type="Line2D" parent="Body"]
+points = PackedVector2Array(60.16, 0, 59.65, 7.85, 58.11, 15.57, 55.58, 23.02, 52.1, 30.08, 47.73, 36.62, 42.54, 42.54, 36.62, 47.73, 30.08, 52.1, 23.02, 55.58, 15.57, 58.11, 7.85, 59.65, 0, 60.16, -7.85, 59.65, -15.57, 58.11, -23.02, 55.58, -30.08, 52.1, -36.62, 47.73, -42.54, 42.54, -47.73, 36.62, -52.1, 30.08, -55.58, 23.02, -58.11, 15.57, -59.65, 7.85, -60.16, 0, -59.65, -7.85, -58.11, -15.57, -55.58, -23.02, -52.1, -30.08, -47.73, -36.62, -42.54, -42.54, -36.62, -47.73, -30.08, -52.1, -23.02, -55.58, -15.57, -58.11, -7.85, -59.65, -0, -60.16, 7.85, -59.65, 15.57, -58.11, 23.02, -55.58, 30.08, -52.1, 36.62, -47.73, 42.54, -42.54, 47.73, -36.62, 52.1, -30.08, 55.58, -23.02, 58.11, -15.57, 59.65, -7.85)
+closed = true
+width = 7.68
+default_color = Color(0.7882, 0.5608, 0, 1)
+antialiased = true

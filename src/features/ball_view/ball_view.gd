@@ -1,78 +1,93 @@
 class_name BallView
 extends Node2D
 
-## Glowing volleyball (concept): yellow halo, light spot, dark rim, two spinning seams,
-## a short fading trail and a floor shadow. View-only state (spin, trail) never feeds back.
+## Glowing volleyball (concept). The look lives in ball_view.tscn and is tuned there in the editor:
+## Body (Halo, Base, Light, Seams, Rim) is drawn for a ball of `design_radius_px`, Shadow and
+## Trail next to it. The script only moves those nodes:
+## - Body is scaled to the real radius, Seams spin with the ball's horizontal speed;
+## - Shadow sits on the floor and shrinks / fades with height;
+## - Trail follows the flying ball (its points in the scene are an editor preview only).
+## View-only state (spin, trail) never feeds back.
 
-@export var trail_length: int = 5
+## Ball radius the nodes in the scene are drawn for.
+@export var design_radius_px: float = 64.0
+@export_group("Trail")
+@export var trail_points: int = 5
 @export var trail_spacing_px: float = 14.0
+@export_group("Shadow")
+## Height (in ball radii) where the shadow is the faintest.
+@export var shadow_fade_radii: float = 10.0
+@export_range(0.0, 1.0) var shadow_min_fade: float = 0.1
+## Shadow size at the faintest, relative to the size on the floor.
+@export_range(0.0, 1.0) var shadow_min_size: float = 0.5
+@export_group("Nodes")
+@export var body: Node2D
+@export var seams: Node2D
+@export var shadow: Node2D
+@export var trail: Line2D
 
-var radius_px: float = 34.0
+var radius_px: float = 64.0:
+	set(value):
+		radius_px = value
+		_apply_size()
 
-var _light: GradientTexture2D
-var _spin: float = 0.0
-var _trail: Array[Vector2] = []
-var _floor_offset: float = 0.0
-var _height_px: float = 0.0
-var _frozen: bool = true
+var _shadow_scale := Vector2.ONE
+var _shadow_alpha: float = 1.0
+var _trail_width: float = 0.0
+var _history := PackedVector2Array()
+
+
+func _ready() -> void:
+	_shadow_scale = shadow.scale
+	_shadow_alpha = shadow.modulate.a
+	_trail_width = trail.width
+	trail.clear_points()
+	_apply_size()
 
 
 func setup(p_radius_px: float) -> void:
 	radius_px = p_radius_px
-	_light = _make_light_texture()
-	_trail.clear()
-	queue_redraw()
+	_history.clear()
+	trail.clear_points()
 
 
 func apply(pos: Vector2, vx_mps: float, frozen: bool, floor_y: float, px_per_m: float, delta: float) -> void:
-	if not frozen and (_trail.is_empty() or _trail.back().distance_to(pos) >= trail_spacing_px):
-		_trail.append(pos)
-		while _trail.size() > trail_length:
-			_trail.pop_front()
-	if frozen:
-		_trail.clear()
-	_frozen = frozen
 	position = pos
-	_floor_offset = floor_y - pos.y
-	_height_px = maxf(0.0, _floor_offset - radius_px)
-	_spin += vx_mps * px_per_m * delta / maxf(radius_px, 1.0)
-	queue_redraw()
+	seams.rotation += vx_mps * px_per_m * delta / maxf(radius_px, 1.0)
+
+	var floor_offset := floor_y - pos.y
+	var height := maxf(0.0, floor_offset - radius_px)
+	var fade := clampf(1.0 - height / (shadow_fade_radii * radius_px), shadow_min_fade, 1.0)
+	shadow.position = Vector2(0.0, floor_offset)
+	shadow.scale = _shadow_scale * _size_factor() * lerpf(shadow_min_size, 1.0, fade)
+	shadow.modulate.a = _shadow_alpha * fade
+
+	_update_trail(frozen)
 
 
-func _draw() -> void:
-	var r := radius_px
-	var fade := clampf(1.0 - _height_px / (10.0 * r), 0.1, 1.0)
-	draw_set_transform(Vector2(0.0, _floor_offset), 0.0, Vector2(1.0, 0.2))
-	draw_circle(Vector2.ZERO, r * (0.5 + 0.5 * fade), Color(0, 0, 0, 0.45 * fade), true, -1.0, true)
-	draw_set_transform_matrix(Transform2D.IDENTITY)
-
-	for i in _trail.size():
-		var t := float(i + 1) / float(_trail.size() + 1)
-		draw_circle(_trail[i] - position, r * (0.35 + 0.45 * t), Color(1.0, 0.82, 0.04, 0.18 * t), true, -1.0, true)
-
-	draw_circle(Vector2.ZERO, r * 1.45, Color(1.0, 0.82, 0.04, 0.07), true, -1.0, true)
-	draw_circle(Vector2.ZERO, r * 1.2, Color(1.0, 0.82, 0.04, 0.14), true, -1.0, true)
-	draw_circle(Vector2.ZERO, r, Color("#FFD20A"), true, -1.0, true)
-	if _light != null:
-		draw_texture_rect(_light, Rect2(-r, -r, 2.0 * r, 2.0 * r), false)
-	var seam := Color("#B07B00", 0.6)
-	var seam_w := r * 0.08
-	for k in 2:
-		var angle := _spin + PI * float(k)
-		var offset := Vector2(cos(angle), sin(angle)) * r * 0.9
-		draw_arc(offset, r * 0.75, angle + PI - 0.9, angle + PI + 0.9, 16, seam, seam_w, true)
-	draw_arc(Vector2.ZERO, r - r * 0.06, 0.0, TAU, 48, Color("#C98F00"), r * 0.12, true)
+func _update_trail(frozen: bool) -> void:
+	if frozen:
+		_history.clear()
+		trail.clear_points()
+		return
+	var here := trail.to_local(global_position)
+	if _history.is_empty() or _history[-1].distance_to(here) >= trail_spacing_px:
+		_history.append(here)
+		while _history.size() > trail_points:
+			_history.remove_at(0)
+	var points := _history.duplicate()
+	if points[-1] != here:
+		points.append(here)
+	trail.points = points
 
 
-func _make_light_texture() -> GradientTexture2D:
-	var gradient := Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 1.0])
-	gradient.colors = PackedColorArray([Color("#FFF6C2", 0.95), Color("#FFF6C2", 0.0)])
-	var texture := GradientTexture2D.new()
-	texture.gradient = gradient
-	texture.width = 64
-	texture.height = 64
-	texture.fill = GradientTexture2D.FILL_RADIAL
-	texture.fill_from = Vector2(0.38, 0.33)
-	texture.fill_to = Vector2(0.72, 0.33)
-	return texture
+func _apply_size() -> void:
+	if not is_node_ready():
+		return
+	var k := _size_factor()
+	body.scale = Vector2(k, k)
+	trail.width = _trail_width * k
+
+
+func _size_factor() -> float:
+	return radius_px / maxf(design_radius_px, 1.0)
