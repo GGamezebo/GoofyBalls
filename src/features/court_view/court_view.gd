@@ -1,13 +1,25 @@
 class_name CourtView
 extends Node2D
 
-## Court lines (concept): dark floor strip with a cyan neon edge, faint walls and ceiling,
-## glowing nets with a white cap. A zone flashes in the scoring team color after a point.
+## Court (concept): dark floor strip with a cyan neon edge, faint walls and ceiling, glowing nets
+## with a white cap; a zone flashes in the scoring team color after a point. The look lives in
+## court_view.tscn and net_view.tscn and is tuned in the editor (the scene shows the default
+## 1600×900 layout of arena S). The script only fits the nodes to the court MatchView gives:
+## wall and floor points, floor strip width, one NetView per net, the flash rectangle.
 
-@export var line_color: Color = Color("#03B8FF")
-@export var floor_color: Color = Color("#1A2340")
-@export var net_color: Color = Color("#9AE2FF")
 @export var flash_sec: float = 0.6
+## How far the floor sticks out past the walls.
+@export var floor_overhang_px: float = 24.0
+@export_group("Nodes")
+## Its color alpha is the flash strength; the color itself comes from the scoring team.
+@export var flash: ColorRect
+@export var walls: Line2D
+@export var floor_strip: ColorRect
+## Lines drawn along the floor edge (glow, line).
+@export var floor_lines: Array[Line2D] = []
+## Holds the nets; whatever is there in the scene is an editor preview.
+@export var nets_parent: Node2D
+@export var net_template: PackedScene
 
 ## Court rectangle in px: x from left wall to right wall, y from ceiling to floor.
 var court := Rect2(60, 120, 1480, 640)
@@ -16,53 +28,54 @@ var nets: Array[Dictionary] = []
 ## Each zone: {"x_min": px, "x_max": px}.
 var zones: Array[Dictionary] = []
 
-var _flash_zone: int = -1
-var _flash_color := Color.WHITE
+var _flash_alpha: float = 0.12
 var _flash_t: float = 0.0
+
+
+func _ready() -> void:
+	_flash_alpha = flash.color.a
+	flash.visible = false
 
 
 func setup(p_court: Rect2, p_nets: Array[Dictionary], p_zones: Array[Dictionary]) -> void:
 	court = p_court
 	nets = p_nets
 	zones = p_zones
-	queue_redraw()
-
-
-func flash_zone(zone: int, color: Color) -> void:
-	_flash_zone = zone
-	_flash_color = color
-	_flash_t = 1.0
-	queue_redraw()
-
-
-func _process(delta: float) -> void:
-	if _flash_t > 0.0:
-		_flash_t = maxf(0.0, _flash_t - delta / flash_sec)
-		queue_redraw()
-
-
-func _draw() -> void:
 	var floor_y := court.end.y
-	if _flash_t > 0.0 and _flash_zone >= 0 and _flash_zone < zones.size():
-		var zone: Dictionary = zones[_flash_zone]
-		var rect := Rect2(float(zone["x_min"]), court.position.y, float(zone["x_max"]) - float(zone["x_min"]), court.size.y)
-		draw_rect(rect, Color(_flash_color, 0.12 * _flash_t))
-
-	var walls := PackedVector2Array([
+	walls.points = PackedVector2Array([
 		Vector2(court.position.x, floor_y), court.position,
 		Vector2(court.end.x, court.position.y), Vector2(court.end.x, floor_y),
 	])
-	draw_polyline(walls, Color(line_color, 0.25), 2.0, true)
-
-	draw_rect(Rect2(court.position.x - 24.0, floor_y, court.size.x + 48.0, 14.0), floor_color)
-	draw_line(Vector2(court.position.x - 24.0, floor_y), Vector2(court.end.x + 24.0, floor_y), Color(line_color, 0.18), 14.0, true)
-	draw_line(Vector2(court.position.x - 24.0, floor_y), Vector2(court.end.x + 24.0, floor_y), Color(line_color, 0.9), 4.0, true)
-
+	var left := court.position.x - floor_overhang_px
+	var right := court.end.x + floor_overhang_px
+	floor_strip.position = Vector2(left, floor_y)
+	floor_strip.size = Vector2(right - left, floor_strip.size.y)
+	for line in floor_lines:
+		line.points = PackedVector2Array([Vector2(left, floor_y), Vector2(right, floor_y)])
+	for child in nets_parent.get_children():
+		nets_parent.remove_child(child)
+		child.queue_free()
 	for net in nets:
-		var x := float(net["x"])
+		var view: NetView = net_template.instantiate()
+		nets_parent.add_child(view)
 		var top := float(net["top"])
-		var w := maxf(float(net["w"]), 6.0)
-		draw_rect(Rect2(x - w * 1.5, top, w * 3.0, floor_y - top), Color(net_color, 0.12))
-		draw_rect(Rect2(x - w * 0.5, top, w, floor_y - top), net_color)
-		draw_circle(Vector2(x, top), 14.0, Color(1, 1, 1, 0.18), true, -1.0, true)
-		draw_circle(Vector2(x, top), 8.0, Color.WHITE, true, -1.0, true)
+		view.setup(Vector2(float(net["x"]), top), floor_y - top, float(net["w"]))
+
+
+func flash_zone(zone: int, color: Color) -> void:
+	if zone < 0 or zone >= zones.size():
+		return
+	var rect: Dictionary = zones[zone]
+	flash.position = Vector2(float(rect["x_min"]), court.position.y)
+	flash.size = Vector2(float(rect["x_max"]) - float(rect["x_min"]), court.size.y)
+	flash.color = Color(color, _flash_alpha)
+	flash.visible = true
+	_flash_t = 1.0
+
+
+func _process(delta: float) -> void:
+	if _flash_t <= 0.0:
+		return
+	_flash_t = maxf(0.0, _flash_t - delta / flash_sec)
+	flash.color.a = _flash_alpha * _flash_t
+	flash.visible = _flash_t > 0.0

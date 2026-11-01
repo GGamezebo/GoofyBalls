@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/features/court_view/net_view.gd" id="1_net"]
+
+[sub_resource type="Gradient" id="Gradient_cap"]
+offsets = PackedFloat32Array(0, 0.94, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_cap"]
+gradient = SubResource("Gradient_cap")
+width = 64
+height = 64
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="NetView" type="Node2D" node_paths=PackedStringArray("body")]
+script = ExtResource("1_net")
+design_width_px = 12
+design_height_px = 233
+body = NodePath("Body")
+
+[node name="Body" type="Node2D" parent="."]
+
+[node name="Glow" type="ColorRect" parent="Body"]
+offset_left = -18
+offset_right = 18
+offset_bottom = 233
+mouse_filter = 2
+color = Color(0.6039, 0.8863, 1, 0.12)
+
+[node name="Pole" type="ColorRect" parent="Body"]
+offset_left = -6
+offset_right = 6
+offset_bottom = 233
+mouse_filter = 2
+color = Color(0.6039, 0.8863, 1, 1)
+
+[node name="Cap" type="Node2D" parent="."]
+
+[node name="CapGlow" type="Sprite2D" parent="Cap"]
+self_modulate = Color(1, 1, 1, 0.18)
+scale = Vector2(0.44, 0.44)
+texture = SubResource("GradientTexture2D_cap")
+
+[node name="CapDot" type="Sprite2D" parent="Cap"]
+scale = Vector2(0.25, 0.25)
+texture = SubResource("GradientTexture2D_cap")
