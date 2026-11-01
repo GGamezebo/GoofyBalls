@@ -4,12 +4,16 @@ extends Resource
 ## Court geometry (meters, x = 0 at the center, y = 0 on the floor). The court is split into
 ## one zone per team with a net between neighbouring zones.
 
+## Half of the court width: walls at ±half_width.
 @export var half_width: float = 7.0
+## The ball bounces off the ceiling here.
 @export var ceiling: float = 6.6
 @export var net_height: float = 2.4
+## Half of the net thickness.
 @export var net_half_width: float = 0.06
 ## Extra gap between a blob and the net.
 @export var net_clearance: float = 0.07
+## Height the served ball hangs at.
 @export var serve_height: float = 5.0
 ## Serve ball sits this far from the server toward the court center.
 @export var serve_offset: float = 1.0

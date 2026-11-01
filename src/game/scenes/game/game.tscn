@@ -8,6 +8,7 @@
 [ext_resource type="Resource" path="res://src/common/team_palette.tres" id="6_pal"]
 [ext_resource type="Resource" path="res://src/common/log_settings.tres" id="7_log"]
 [ext_resource type="Resource" path="res://src/features/match_session/net_tuning.tres" id="8_tune"]
+[ext_resource type="Resource" path="res://src/features/ai_opponent/ai_normal.tres" id="24_ai"]
 [ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_none.tres" id="9_l0"]
 [ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_wifi.tres" id="10_l1"]
 [ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_4g.tres" id="11_l2"]
@@ -33,6 +34,7 @@ default_setup = ExtResource("5_setup")
 palette = ExtResource("6_pal")
 log_settings = ExtResource("7_log")
 net_tuning = ExtResource("8_tune")
+ai_profile = ExtResource("24_ai")
 net_link = ExtResource("23_link")
 lag_profiles = Array[ExtResource("20_lp")]([ExtResource("9_l0"), ExtResource("10_l1"), ExtResource("11_l2"), ExtResource("12_l3"), ExtResource("21_l4"), ExtResource("22_l5")])
 determinism_probe = ExtResource("13_probe")

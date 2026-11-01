@@ -25,5 +25,6 @@ Components:
 - Parent creates children in the scene tree and calls their methods directly; children only emit `ev_*`; only the parent subscribes. Children never hold/fetch parent (`get_parent()`, `owner`, injected ref). Siblings never call each other.
 - Reusable, but no over-engineering: no abstraction without a second real use.
 SOLID: one reason to change per script; extend via new component/Resource/state, not `if kind ==`; subclasses keep base contract; small public surface; depend on exported Resources/signals/`class_name`, not paths/globals.
+Balance knobs: every gameplay/feel number (physics, rules, AI, timings, FX) is an `@export` with a `##` tooltip in a `.tres` Resource or scene; no magic numbers in sim/AI/view code. Defaults keep behaviour (determinism golden hash).
 Godot best practices: scene composition, signals up / calls down, typed GDScript, `@export` over `res://`, Resources for data, `RefCounted` for pure logic.
 Logging: `logging.md`.

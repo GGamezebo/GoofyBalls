@@ -11,6 +11,8 @@ extends IScene
 @export var palette: TeamPalette
 @export var log_settings: LogSettings
 @export var net_tuning: NetTuning
+## How bots play (balance knobs).
+@export var ai_profile: AiProfile
 ## Direct link to the opponent, put there by App/Online (null = relay only).
 @export var net_link: NetLink
 ## Network emulation presets for the debug overlay (index 0 = off).
@@ -46,7 +48,7 @@ func initialize(data: Dictionary) -> void:
 
 	var my_id := multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 0
 	_online = _setup.has_remote_peers(my_id)
-	_inputs = MatchInputs.new(_setup, my_id, _sim)
+	_inputs = MatchInputs.new(_setup, my_id, _sim, ai_profile)
 
 	if _online:
 		_session = RollbackSession.new()

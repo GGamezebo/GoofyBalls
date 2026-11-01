@@ -9,7 +9,7 @@ paths:
 - RNG: xorshift int in state, seed from `MatchSetup`.
 - State = plain Dictionary/Arrays; supports save/load/hash. Fixed iteration order.
 - Match phases (serve/play/point/end) live in sim state — no separate GameManager FSM for rules.
-- Physics values via `param(name, target)` (preset ⊕ modifiers).
+- Physics values via `param(name, target)` (preset ⊕ modifiers); no balance literals in sim code — new number → `PhysicsPreset`/`ArenaPreset`/`RuleSet` field.
 - Visual events → `*_serial` counters; no signals/fx from `step()`.
 - Hitboxes circles/capsules; deformation is view-only.
 - Keep determinism + save/load hash tests green.

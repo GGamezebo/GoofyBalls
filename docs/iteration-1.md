@@ -192,9 +192,14 @@ godot --headless --path . --script res://tests/e2e/nakama_peer.gd -- role=guest 
 
 ## 8. Настройка без кода
 
+Все числа баланса и вида лежат в ресурсах и сценах, у каждого поля в инспекторе есть подсказка (наведи мышь).
+
 | Что | Файл |
 |---|---|
-| Физика (скорость, прыжок, мяч) | `src/common/presets/physics_classic.tres` |
+| Физика: бег, прыжок, управление в воздухе, удар (сила, отскок, перенос скорости блоба в мяч), мяч | `src/common/presets/physics_classic.tres` |
+| Бот: где стоит, как быстро бегает, когда прыгает | `src/features/ai_opponent/ai_normal.tres` (бой берёт его из `Game.ai_profile`) |
+| Вид мяча, блоба, корта и сетки | `src/features/ball_view/`, `blob_view/`, `court_view/` (`.tscn`, ноды) |
+| Сглаживание после отката | `MatchView` в `src/game/scenes/game/game.tscn` |
 | Корт (ширина, сетка, высота подачи) | `src/common/presets/arena_s.tres` |
 | Правила (до скольких очков, касания, паузы) | `src/common/presets/rules_points_7.tres` |
 | Задержка ввода и буфер отката | `src/features/match_session/net_tuning.tres` |

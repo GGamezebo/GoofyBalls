@@ -13,7 +13,7 @@ var _prefixes: Array = []
 var _bots: Dictionary = {}
 
 
-func _init(match_setup: MatchSetup, my_peer_id: int, sim: VolleySim) -> void:
+func _init(match_setup: MatchSetup, my_peer_id: int, sim: VolleySim, ai_profile: AiProfile = null) -> void:
 	_sim = sim
 	var slots := match_setup.slots()
 	# A single human on this machine may use either key set (WASD or arrows) and the touch pad.
@@ -23,7 +23,7 @@ func _init(match_setup: MatchSetup, my_peer_id: int, sim: VolleySim) -> void:
 		if slot.is_bot:
 			_kinds.append(Kind.BOT)
 			_prefixes.append([])
-			_bots[index] = AiOpponent.new(index)
+			_bots[index] = AiOpponent.new(index, ai_profile)
 		elif slot.peer_id != 0 and slot.peer_id != my_peer_id:
 			_kinds.append(Kind.REMOTE)
 			_prefixes.append([])

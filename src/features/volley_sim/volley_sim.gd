@@ -166,7 +166,7 @@ func _step_player(player: Dictionary, input: Dictionary) -> void:
 	if bool(physics["snap_move"]) and on_floor:
 		player["vx"] = target_vx
 	else:
-		var accel := param("ground_accel") if on_floor else move_speed * param("air_control") * 8.0
+		var accel := param("ground_accel") if on_floor else move_speed * param("air_control") * param("air_accel_scale")
 		player["vx"] = move_toward(float(player["vx"]), target_vx, accel * DT)
 
 	if int(input.get("j", 0)) != 0 and on_floor:
@@ -415,9 +415,9 @@ func _apply_hit(player: Dictionary, ball: Dictionary, nx: float, ny: float) -> v
 	var by := ivy - 2.0 * dot * ny
 	var hit := param("hit_speed") * param("hit_push")
 	var reflect := param("hit_reflect")
-	var nvx := bx * reflect + nx * hit + float(player["vx"]) * 0.75
-	var nvy := by * reflect + ny * hit + float(player["vy"]) * 0.5
-	if loft > 0.2:
+	var nvx := bx * reflect + nx * hit + float(player["vx"]) * param("hit_carry_x")
+	var nvy := by * reflect + ny * hit + float(player["vy"]) * param("hit_carry_y")
+	if loft > param("hit_loft_min"):
 		nvy = maxf(nvy, param("hit_min_up") * loft)
 	else:
 		nvy = maxf(nvy, param("hit_floor_vy"))
