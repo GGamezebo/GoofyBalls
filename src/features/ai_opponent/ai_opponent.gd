@@ -63,7 +63,8 @@ func decide(state: Dictionary, physics: Dictionary, arena: Dictionary) -> Dictio
 
 
 ## Where the ball will be (x) when it falls to `target_y`: same gravity, damping and wall
-## bounces as the sim, ignoring nets and players; gives up after `max_ticks`.
+## bounces (soft, gripping) as the sim, ignoring nets, players and the short stick on a touch.
+## Gives up after `max_ticks`.
 static func predict_x(ball: Dictionary, physics: Dictionary, half_width: float, target_y: float, max_ticks: int = 300) -> float:
 	var x := float(ball["x"])
 	var y := float(ball["y"])
@@ -72,6 +73,7 @@ static func predict_x(ball: Dictionary, physics: Dictionary, half_width: float, 
 	var gravity := float(physics["ball_gravity"])
 	var damp := maxf(0.0, 1.0 - float(physics["ball_damp"]) * DT)
 	var bounce := float(physics["ball_bounce"])
+	var slide := 1.0 - float(physics["ball_grip"])
 	var limit := half_width - float(physics["ball_radius"])
 	for _i in max_ticks:
 		if vy < 0.0 and y <= target_y:
@@ -84,9 +86,11 @@ static func predict_x(ball: Dictionary, physics: Dictionary, half_width: float, 
 		if x > limit:
 			x = limit
 			vx = -absf(vx) * bounce
+			vy *= slide
 		elif x < -limit:
 			x = -limit
 			vx = absf(vx) * bounce
+			vy *= slide
 	return x
 
 

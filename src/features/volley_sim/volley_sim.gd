@@ -64,7 +64,7 @@ func reset(config: Dictionary) -> void:
 		"zones": zones,
 		"nets": nets,
 		"players": players,
-		"balls": [{"x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "frozen": true, "last_toucher": -1, "cooldown": 0}],
+		"balls": [_new_ball()],
 		"touch_serial": 0,
 		"touch_player": -1,
 		"point_serial": 0,
@@ -235,6 +235,8 @@ func _begin_serve() -> void:
 	ball["frozen"] = true
 	ball["last_toucher"] = -1
 	ball["cooldown"] = 0
+	ball["stick"] = 0
+	ball["stick_player"] = -1
 
 
 func _start_play() -> void:
@@ -258,6 +260,8 @@ func _rally_lost(losing_team: int, reason: int) -> void:
 		ball["frozen"] = true
 		ball["vx"] = 0.0
 		ball["vy"] = 0.0
+		ball["stick"] = 0
+		ball["stick_player"] = -1
 
 
 func _after_point() -> void:
@@ -278,12 +282,26 @@ func _first_player_of(team: int) -> Dictionary:
 
 
 # --- ball -------------------------------------------------------------------------------
+# Tar ball (Gish feel): heavy, soft bounces that grip walls and nets, and a short stick to the
+# blob on a touch (it rides along, then launches). Hitbox stays a circle; squish is view-only,
+# driven by `impact_serial` + `impact_nx/ny` (direction the ball was pushed) + `impact_power`.
+
+static func _new_ball() -> Dictionary:
+	return {
+		"x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "frozen": true, "last_toucher": -1, "cooldown": 0,
+		"stick": 0, "stick_player": -1, "stick_dx": 0.0, "stick_dy": 0.0,
+		"impact_serial": 0, "impact_nx": 0.0, "impact_ny": 0.0, "impact_power": 0.0,
+	}
+
 
 func _step_play() -> void:
 	var physics: Dictionary = cfg["physics"]
 	var arena: Dictionary = cfg["arena"]
 	var ball: Dictionary = state["balls"][0]
 	ball["cooldown"] = maxi(0, int(ball["cooldown"]) - 1)
+	if int(ball["stick"]) > 0:
+		_step_stuck(ball)
+		return
 
 	var vx := float(ball["vx"])
 	var vy := float(ball["vy"])
@@ -309,28 +327,74 @@ func _step_play() -> void:
 			_collide_net(ball, net)
 		if _collide_players(ball):
 			return # touch fault ended the rally
+		if int(ball["stick"]) > 0:
+			return # glued to a blob: it carries the ball from the next tick
 
 	var ball_radius := param("ball_radius")
 	if float(ball["y"]) <= float(arena["floor_score_y"]) and (float(ball["vy"]) < -1.0 or float(ball["y"]) <= ball_radius + 0.01):
+		_impact(ball, 0.0, 1.0, -float(ball["vy"]))
 		_rally_lost(zone_of(float(ball["x"])), Reason.FLOOR)
+
+
+## The ball rides on its blob at the contact offset; on the last stuck tick the hit launches it.
+## Velocity keeps the incoming value meanwhile (the hit reflects part of it).
+func _step_stuck(ball: Dictionary) -> void:
+	var player: Dictionary = state["players"][int(ball["stick_player"])]
+	ball["x"] = float(player["x"]) + float(ball["stick_dx"])
+	ball["y"] = maxf(float(player["y"]) + float(ball["stick_dy"]), param("ball_radius"))
+	ball["stick"] = int(ball["stick"]) - 1
+	if int(ball["stick"]) > 0:
+		return
+	var dx := float(ball["stick_dx"])
+	var dy := float(ball["stick_dy"])
+	var dist := sqrt(dx * dx + dy * dy)
+	var nx := 0.0
+	var ny := 1.0
+	if dist > 0.001:
+		nx = dx / dist
+		ny = dy / dist
+	_apply_hit(player, ball, nx, ny)
+	ball["stick_player"] = -1
+	ball["cooldown"] = int(cfg["physics"]["touch_cooldown_ticks"])
+	_impact(ball, nx, ny, sqrt(float(ball["vx"]) * float(ball["vx"]) + float(ball["vy"]) * float(ball["vy"])))
+	# Launch from a legal spot: the ride may have pressed the ball into a wall or a net.
+	_collide_walls(ball)
+	for net in state["nets"]:
+		_collide_net(ball, net)
+
+
+## Visual squish event: the ball was pushed along (nx, ny) with `power` m/s of speed change.
+func _impact(ball: Dictionary, nx: float, ny: float, power: float) -> void:
+	if power < 1.0:
+		return
+	ball["impact_serial"] = int(ball["impact_serial"]) + 1
+	ball["impact_nx"] = nx
+	ball["impact_ny"] = ny
+	ball["impact_power"] = power
 
 
 func _collide_walls(ball: Dictionary) -> void:
 	var arena: Dictionary = cfg["arena"]
 	var radius := param("ball_radius")
 	var bounce := param("ball_bounce")
+	var slide := 1.0 - param("ball_grip")
 	var limit := float(arena["half_width"]) - radius
 	var x := float(ball["x"])
-	if x > limit:
-		ball["x"] = limit
-		ball["vx"] = -absf(float(ball["vx"])) * bounce
-	elif x < -limit:
-		ball["x"] = -limit
-		ball["vx"] = absf(float(ball["vx"])) * bounce
+	if x > limit or x < -limit:
+		var nx := -1.0 if x > limit else 1.0
+		var vn := float(ball["vx"]) * nx
+		ball["x"] = -limit * nx
+		if vn < 0.0:
+			ball["vx"] = -vn * bounce * nx
+			ball["vy"] = float(ball["vy"]) * slide
+			_impact(ball, nx, 0.0, -vn)
+	# Ceiling: no grip, so lobs stay readable.
 	var top := float(arena["ceiling"]) - radius
 	if float(ball["y"]) > top:
 		ball["y"] = top
-		ball["vy"] = -absf(float(ball["vy"])) * bounce
+		if float(ball["vy"]) > 0.0:
+			_impact(ball, 0.0, -1.0, float(ball["vy"]))
+			ball["vy"] = -float(ball["vy"]) * bounce
 
 
 func _collide_net(ball: Dictionary, net: Dictionary) -> void:
@@ -360,11 +424,18 @@ func _collide_net(ball: Dictionary, net: Dictionary) -> void:
 	var push := radius - dist
 	ball["x"] = x + nx * push
 	ball["y"] = y + ny * push
-	var vn := float(ball["vx"]) * nx + float(ball["vy"]) * ny
+	var vx := float(ball["vx"])
+	var vy := float(ball["vy"])
+	var vn := vx * nx + vy * ny
 	if vn < 0.0:
 		var bounce := param("ball_bounce")
-		ball["vx"] = float(ball["vx"]) - (1.0 + bounce) * vn * nx
-		ball["vy"] = float(ball["vy"]) - (1.0 + bounce) * vn * ny
+		var slide := 1.0 - param("ball_grip")
+		# Tangential part slows by the grip, normal part bounces back softly.
+		var tx := (vx - vn * nx) * slide
+		var ty := (vy - vn * ny) * slide
+		ball["vx"] = tx - bounce * vn * nx
+		ball["vy"] = ty - bounce * vn * ny
+		_impact(ball, nx, ny, -vn)
 
 
 ## Returns true when a touch fault ended the rally.
@@ -396,13 +467,25 @@ func _collide_players(ball: Dictionary) -> bool:
 
 		if int(ball["last_toucher"]) == i and int(ball["cooldown"]) > 0:
 			continue
-		_apply_hit(player, ball, nx, ny)
+		var stick_ticks := int(physics["ball_stick_ticks"])
+		if stick_ticks > 0:
+			# Tar: glue to the blob now, launch in `_step_stuck` once the stick runs out.
+			var rel_vn := (float(ball["vx"]) - float(player["vx"])) * nx + (float(ball["vy"]) - float(player["vy"])) * ny
+			_impact(ball, nx, ny, -rel_vn)
+			ball["stick"] = stick_ticks
+			ball["stick_player"] = i
+			ball["stick_dx"] = nx * reach
+			ball["stick_dy"] = ny * reach
+		else:
+			_apply_hit(player, ball, nx, ny)
+			ball["cooldown"] = int(physics["touch_cooldown_ticks"])
 		ball["last_toucher"] = i
-		ball["cooldown"] = int(physics["touch_cooldown_ticks"])
 		state["touch_serial"] = int(state["touch_serial"]) + 1
 		state["touch_player"] = i
 		if _register_touch(int(player["team"])):
 			return true
+		if stick_ticks > 0:
+			return false
 	return false
 
 
