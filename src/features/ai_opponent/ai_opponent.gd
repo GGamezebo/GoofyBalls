@@ -70,7 +70,9 @@ func decide(state: Dictionary, physics: Dictionary, arena: Dictionary) -> Dictio
 	var in_reach := float(ball["y"]) > JUMP_HEIGHT_MIN and float(ball["y"]) < JUMP_HEIGHT_MAX
 	var on_floor := float(player["y"]) <= blob_radius + 0.001
 	var jump := ball_u > 0.0 and near_x and descending and in_reach and on_floor and not bool(ball["frozen"])
-	return {"x": roundi(_axis * 100.0), "j": 1 if jump else 0, "a": 0}
+	# Keep holding while rising: a released jump is cut short (tap = hop).
+	var rising := not on_floor and float(player["vy"]) > 0.0
+	return {"x": roundi(_axis * 100.0), "j": 1 if jump or rising else 0, "a": 0}
 
 
 ## Where the ball will be (x) when it falls to `target_y`: same gravity, damping and wall

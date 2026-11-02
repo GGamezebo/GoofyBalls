@@ -103,13 +103,42 @@ func test_players_stay_in_their_zone() -> void:
 
 
 func test_jump_apex() -> void:
+	var held := _jump_top(90)
+	var tap := _jump_top(1)
+	expect(held > 2.5 and held < 4.5, "held jump apex 2.5..4.5 m (got %.2f)" % held)
+	expect(tap < held - 0.5, "tap = short hop (%.2f vs %.2f)" % [tap, held])
+
+
+func _jump_top(hold_ticks: int) -> float:
 	var sim := _new_sim()
 	var top := 0.0
 	for t in 90:
-		sim.step([{"x": 0, "j": 1 if t == 0 else 0, "a": 0}, VolleySim.neutral_input()])
+		sim.step([{"x": 0, "j": 1 if t < hold_ticks and not (t > 0 and sim.is_on_floor(0)) else 0, "a": 0}, VolleySim.neutral_input()])
 		top = maxf(top, float(sim.state["players"][0]["y"]))
-	expect(top > 2.5 and top < 4.5, "jump apex 2.5..4.5 m (got %.2f)" % top)
 	expect(sim.is_on_floor(0), "lands again")
+	return top
+
+
+func test_blob_sticks_to_outer_wall_not_net() -> void:
+	var sim := _new_sim()
+	var player: Dictionary = sim.state["players"][0]
+	var limits := sim.player_limits(0)
+	player["x"] = float(limits[0])
+	player["y"] = 3.0
+	player["vy"] = -6.0
+	sim.step([{"x": -100, "j": 0, "a": 0}, VolleySim.neutral_input()])
+	player = sim.state["players"][0]
+	expect_eq(int(player["cling"]), -1, "clings to the back wall")
+	expect(float(player["vy"]) >= -sim.param("wall_slide_speed") - 0.001, "slides down slowly")
+	sim.step([{"x": -100, "j": 1, "a": 0}, VolleySim.neutral_input()])
+	player = sim.state["players"][0]
+	expect(float(player["vy"]) > 0.0 and float(player["vx"]) > 0.0, "wall jump goes up and away")
+
+	player["x"] = float(limits[1])
+	player["y"] = 3.0
+	player["vy"] = -6.0
+	sim.step([{"x": 100, "j": 0, "a": 0}, VolleySim.neutral_input()])
+	expect_eq(int(sim.state["players"][0]["cling"]), 0, "the net never sticks")
 
 
 func test_three_team_geometry() -> void:

@@ -42,7 +42,7 @@ func reset(config: Dictionary) -> void:
 	var players: Array = []
 	for team in teams:
 		for _k in int(team_sizes[team]):
-			players.append({"team": team, "x": 0.0, "y": param("blob_radius"), "vx": 0.0, "vy": 0.0})
+			players.append({"team": team, "x": 0.0, "y": param("blob_radius"), "vx": 0.0, "vy": 0.0, "jh": 0, "cling": 0})
 
 	var scores: Array = []
 	for _team in teams:
@@ -155,25 +155,44 @@ func zone_of(x: float) -> int:
 
 
 # --- players ----------------------------------------------------------------------------
+# Tar blobs (Gish feel): a little inertia on the floor, short hop when the jump is released
+# early, and they stick to the outer arena walls (slow slide + wall jump). Nets never stick.
 
 func _step_player(player: Dictionary, input: Dictionary) -> void:
 	var physics: Dictionary = cfg["physics"]
 	var radius := param("blob_radius")
 	var move_speed := param("move_speed")
 	var axis := clampf(float(int(input.get("x", 0))) / 100.0, -1.0, 1.0)
+	var jump_held := int(input.get("j", 0)) != 0
+	var jump_pressed := jump_held and int(player["jh"]) == 0
+	player["jh"] = 1 if jump_held else 0
 	var on_floor := float(player["y"]) <= radius + 0.001
 	var target_vx := axis * move_speed
+	var vx := float(player["vx"])
 	if bool(physics["snap_move"]) and on_floor:
 		player["vx"] = target_vx
+	elif on_floor:
+		# Speeding up along the stick uses `ground_accel`; stopping and turning bite harder.
+		var speeding_up := absf(target_vx) > 0.01 and target_vx * vx >= 0.0
+		var accel := param("ground_accel") if speeding_up else param("ground_friction")
+		player["vx"] = move_toward(vx, target_vx, accel * DT)
 	else:
-		var accel := param("ground_accel") if on_floor else move_speed * param("air_control") * 8.0
-		player["vx"] = move_toward(float(player["vx"]), target_vx, accel * DT)
+		player["vx"] = move_toward(vx, target_vx, move_speed * param("air_control") * 8.0 * DT)
 
-	if int(input.get("j", 0)) != 0 and on_floor:
+	var cling := int(player["cling"])
+	if cling != 0 and jump_pressed and not on_floor:
+		# Wall jump: peel off the wall, away from it.
+		player["vy"] = param("wall_jump_velocity")
+		player["vx"] = -float(cling) * param("wall_jump_push")
+		cling = 0
+	elif jump_held and on_floor:
 		player["vy"] = param("jump_velocity")
 		on_floor = false
 	if not on_floor:
-		player["vy"] = float(player["vy"]) - param("gravity") * DT
+		var gravity := param("gravity")
+		if not jump_held and float(player["vy"]) > 0.0:
+			gravity *= param("jump_cut_gravity")
+		player["vy"] = float(player["vy"]) - gravity * DT
 
 	player["x"] = float(player["x"]) + float(player["vx"]) * DT
 	player["y"] = float(player["y"]) + float(player["vy"]) * DT
@@ -184,14 +203,26 @@ func _step_player(player: Dictionary, input: Dictionary) -> void:
 
 	var limits := player_limits(int(player["team"]))
 	var x := float(player["x"])
-	if x < float(limits[0]):
+	var wall := 0
+	if x <= float(limits[0]):
 		player["x"] = float(limits[0])
+		wall = -1
 		if float(player["vx"]) < 0.0:
 			player["vx"] = 0.0
-	elif x > float(limits[1]):
+	elif x >= float(limits[1]):
 		player["x"] = float(limits[1])
+		wall = 1
 		if float(player["vx"]) > 0.0:
 			player["vx"] = 0.0
+
+	# Stick while airborne and pushing into an outer wall: slide down slowly.
+	var half_width := float(cfg["arena"]["half_width"])
+	var outer := absf(float(player["x"]) + float(wall) * radius) >= half_width - 0.001
+	cling = 0
+	if wall != 0 and outer and axis * float(wall) > 0.3 and float(player["y"]) > radius + 0.001:
+		cling = wall
+		player["vy"] = maxf(float(player["vy"]), -param("wall_slide_speed"))
+	player["cling"] = cling
 
 
 # --- rally flow -------------------------------------------------------------------------
@@ -218,6 +249,7 @@ func _begin_serve() -> void:
 			player["y"] = radius
 			player["vx"] = 0.0
 			player["vy"] = 0.0
+			player["cling"] = 0
 			index += 1
 
 	var server := _first_player_of(int(state["serving_team"]))

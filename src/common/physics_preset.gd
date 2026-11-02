@@ -6,12 +6,20 @@ extends Resource
 @export_group("Blob")
 @export var blob_radius: float = 0.5
 @export var move_speed: float = 6.5
-@export var ground_accel: float = 18.0
+## Tar blob (Gish): reaches full speed in ~0.15 s and stops a bit faster than it starts.
+@export var ground_accel: float = 45.0
+@export var ground_friction: float = 65.0
 @export var air_control: float = 0.55
 @export var jump_velocity: float = 11.6
 @export var gravity: float = 22.0
+## Gravity multiplier while rising with the jump released: tap = short hop, hold = full jump.
+@export var jump_cut_gravity: float = 2.2
 ## Snap horizontal speed to the stick on the floor (crisp control) instead of accelerating.
-@export var snap_move: bool = true
+@export var snap_move: bool = false
+## Outer walls (never nets): pushing into one in the air sticks to it and slides down this slow.
+@export var wall_slide_speed: float = 1.4
+@export var wall_jump_velocity: float = 10.5
+@export var wall_jump_push: float = 5.5
 
 @export_group("Hit")
 @export var hit_speed: float = 8.8
@@ -42,7 +50,10 @@ func to_dict() -> Dictionary:
 	return {
 		"blob_radius": blob_radius, "move_speed": move_speed, "ground_accel": ground_accel,
 		"air_control": air_control, "jump_velocity": jump_velocity, "gravity": gravity,
-		"snap_move": snap_move, "hit_speed": hit_speed, "hit_min_up": hit_min_up,
+		"snap_move": snap_move, "ground_friction": ground_friction,
+		"jump_cut_gravity": jump_cut_gravity, "wall_slide_speed": wall_slide_speed,
+		"wall_jump_velocity": wall_jump_velocity, "wall_jump_push": wall_jump_push,
+		"hit_speed": hit_speed, "hit_min_up": hit_min_up,
 		"hit_reflect": hit_reflect, "hit_push": hit_push, "hit_floor_vy": hit_floor_vy,
 		"touch_cooldown_ticks": touch_cooldown_ticks, "ball_radius": ball_radius,
 		"ball_gravity": ball_gravity, "ball_damp": ball_damp, "ball_bounce": ball_bounce,

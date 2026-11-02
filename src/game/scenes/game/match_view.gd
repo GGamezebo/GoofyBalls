@@ -81,9 +81,13 @@ func capture(tick: int) -> void:
 	var players: Array = state["players"]
 	var p := PackedVector2Array()
 	var vy := PackedFloat32Array()
+	var vx := PackedFloat32Array()
+	var cling := PackedInt32Array()
 	for player in players:
 		p.append(Vector2(float(player["x"]), float(player["y"])))
 		vy.append(float(player["vy"]))
+		vx.append(float(player["vx"]))
+		cling.append(int(player["cling"]))
 	var ball: Dictionary = state["balls"][0]
 	# A ball stuck to a blob rides it: no flight velocity, pressed flat on the blob side.
 	var ball_v := Vector2(float(ball["vx"]), float(ball["vy"]))
@@ -92,7 +96,7 @@ func capture(tick: int) -> void:
 		ball_v = Vector2.ZERO
 		press = Vector2(float(ball["stick_dx"]), -float(ball["stick_dy"])).normalized()
 	_ring[tick % RING] = {
-		"tick": tick, "serve": _serve_number(state), "p": p, "vy": vy,
+		"tick": tick, "serve": _serve_number(state), "p": p, "vy": vy, "vx": vx, "cl": cling,
 		"b": Vector2(float(ball["x"]), float(ball["y"])), "bv": ball_v, "bp": press, "bf": bool(ball["frozen"]),
 	}
 	_latest = tick
@@ -130,7 +134,7 @@ func _process(delta: float) -> void:
 	for i in _blobs.size():
 		var pos_m := _lerp_m(prev["p"][i], cur["p"][i], frac) + _smoother.offset(i)
 		var on_floor := pos_m.y <= _sim.param("blob_radius") + 0.01
-		_blobs[i].apply(to_px(pos_m), float(cur["vy"][i]), on_floor, floor_y, ball_px, delta)
+		_blobs[i].apply(to_px(pos_m), float(cur["vy"][i]), on_floor, floor_y, ball_px, delta, float(cur["vx"][i]), int(cur["cl"][i]))
 	ball_view.apply(ball_px, cur["bv"], bool(cur["bf"]), cur["bp"], floor_y, px_per_m, delta)
 	_smoother.step(delta)
 	_update_fx()
@@ -160,7 +164,7 @@ func _update_fx() -> void:
 	if touch_serial > _seen_touch:
 		var player := int(_sim.state["touch_player"])
 		if player >= 0 and player < _blobs.size():
-			_blobs[player].pulse()
+			_blobs[player].pulse(ball_view.global_position - _blobs[player].global_position)
 	_seen_touch = touch_serial
 	var point_serial := int(_sim.state["point_serial"])
 	if point_serial > _seen_point:
