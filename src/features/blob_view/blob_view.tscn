@@ -14,21 +14,6 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_halo"]
-blend_mode = 1
-
-[sub_resource type="Gradient" id="Gradient_halo"]
-offsets = PackedFloat32Array(0, 0.8, 0.87, 0.96, 1)
-colors = PackedColorArray(1, 1, 1, 0.21, 1, 1, 1, 0.21, 1, 1, 1, 0.15, 1, 1, 1, 0.06, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_halo"]
-gradient = SubResource("Gradient_halo")
-width = 320
-height = 320
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
-
 [sub_resource type="Gradient" id="Gradient_circle"]
 offsets = PackedFloat32Array(0, 0.97, 1)
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
@@ -53,14 +38,22 @@ fill = 1
 fill_from = Vector2(0.4, 0.35)
 fill_to = Vector2(0.72, 0.35)
 
-[node name="BlobView" type="Node2D" node_paths=PackedStringArray("body", "squash", "shadow", "pupils", "tinted", "tinted_light", "name_label")]
+[node name="BlobView" type="Node2D" node_paths=PackedStringArray("art", "goo", "halo_outer", "halo_inner", "skin", "light", "outline", "shine", "sparkle", "eyes", "pupils", "shadow", "tinted", "tinted_light", "name_label")]
 script = ExtResource("1_blob")
-body = NodePath("Body")
-squash = NodePath("Body/Squash")
+art = NodePath("Art")
+goo = NodePath("Art/Goo")
+halo_outer = NodePath("Art/HaloOuter")
+halo_inner = NodePath("Art/HaloInner")
+skin = NodePath("Art/Skin")
+light = NodePath("Art/Light")
+outline = NodePath("Art/Outline")
+shine = NodePath("Art/Shine")
+sparkle = NodePath("Art/Sparkle")
+eyes = [NodePath("Art/EyeLeft"), NodePath("Art/EyeRight")]
+pupils = [NodePath("Art/EyeLeft/Pupil"), NodePath("Art/EyeRight/Pupil")]
 shadow = NodePath("Shadow")
-pupils = [NodePath("Body/Squash/Art/EyeLeft/Pupil"), NodePath("Body/Squash/Art/EyeRight/Pupil")]
-tinted = [NodePath("Body/Squash/Art/Halo"), NodePath("Body/Squash/Art/Base")]
-tinted_light = [NodePath("Body/Squash/Art/Outline")]
+tinted = [NodePath("Art/Goo"), NodePath("Art/HaloOuter"), NodePath("Art/HaloInner"), NodePath("Art/Skin")]
+tinted_light = [NodePath("Art/Outline")]
 name_label = NodePath("NameLabel")
 
 [node name="Shadow" type="Sprite2D" parent="."]
@@ -68,66 +61,68 @@ position = Vector2(0, 128)
 scale = Vector2(0.95, 0.171)
 texture = SubResource("GradientTexture2D_shadow")
 
-[node name="Body" type="Node2D" parent="."]
+[node name="Art" type="Node2D" parent="."]
 
-[node name="Squash" type="Node2D" parent="Body"]
-position = Vector2(0, 128)
+[node name="Goo" type="Node2D" parent="Art"]
 
-[node name="Art" type="Node2D" parent="Body/Squash"]
-position = Vector2(0, -128)
-
-[node name="Halo" type="Sprite2D" parent="Body/Squash/Art"]
-self_modulate = Color(0.0118, 0.7216, 1, 1)
-material = SubResource("CanvasItemMaterial_halo")
-texture = SubResource("GradientTexture2D_halo")
-
-[node name="Base" type="Sprite2D" parent="Body/Squash/Art"]
-self_modulate = Color(0.0118, 0.7216, 1, 1)
-texture = SubResource("GradientTexture2D_circle")
-
-[node name="Light" type="Sprite2D" parent="Body/Squash/Art"]
-texture = SubResource("GradientTexture2D_light")
-
-[node name="Outline" type="Line2D" parent="Body/Squash/Art"]
-self_modulate = Color(0.3577, 0.8190, 1, 1)
-points = PackedVector2Array(123.52, 0, 122.93, 12.11, 121.15, 24.1, 118.2, 35.86, 114.12, 47.27, 108.93, 58.23, 102.7, 68.62, 95.48, 78.36, 87.34, 87.34, 78.36, 95.48, 68.62, 102.7, 58.23, 108.93, 47.27, 114.12, 35.86, 118.2, 24.1, 121.15, 12.11, 122.93, 0, 123.52, -12.11, 122.93, -24.1, 121.15, -35.86, 118.2, -47.27, 114.12, -58.23, 108.93, -68.62, 102.7, -78.36, 95.48, -87.34, 87.34, -95.48, 78.36, -102.7, 68.62, -108.93, 58.23, -114.12, 47.27, -118.2, 35.86, -121.15, 24.1, -122.93, 12.11, -123.52, 0, -122.93, -12.11, -121.15, -24.1, -118.2, -35.86, -114.12, -47.27, -108.93, -58.23, -102.7, -68.62, -95.48, -78.36, -87.34, -87.34, -78.36, -95.48, -68.62, -102.7, -58.23, -108.93, -47.27, -114.12, -35.86, -118.2, -24.1, -121.15, -12.11, -122.93, -0, -123.52, 12.11, -122.93, 24.1, -121.15, 35.86, -118.2, 47.27, -114.12, 58.23, -108.93, 68.62, -102.7, 78.36, -95.48, 87.34, -87.34, 95.48, -78.36, 102.7, -68.62, 108.93, -58.23, 114.12, -47.27, 118.2, -35.86, 121.15, -24.1, 122.93, -12.11)
-closed = true
-width = 8.96
+[node name="StrandA" type="Line2D" parent="Art/Goo"]
+begin_cap_mode = 2
+end_cap_mode = 2
 antialiased = true
 
-[node name="Shine" type="Sprite2D" parent="Body/Squash/Art"]
+[node name="StrandB" type="Line2D" parent="Art/Goo"]
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="StrandC" type="Line2D" parent="Art/Goo"]
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="HaloOuter" type="Polygon2D" parent="Art"]
+color = Color(1, 1, 1, 0.084)
+
+[node name="HaloInner" type="Polygon2D" parent="Art"]
+color = Color(1, 1, 1, 0.14)
+
+[node name="Skin" type="Polygon2D" parent="Art"]
+
+[node name="Light" type="Polygon2D" parent="Art"]
+texture = SubResource("GradientTexture2D_light")
+
+[node name="Outline" type="Line2D" parent="Art"]
+antialiased = true
+
+[node name="Shine" type="Sprite2D" parent="Art"]
 self_modulate = Color(1, 1, 1, 0.75)
-position = Vector2(-51.2, -64)
 rotation = -0.61
 scale = Vector2(0.22, 0.12)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="Sparkle" type="Sprite2D" parent="Body/Squash/Art"]
+[node name="Sparkle" type="Sprite2D" parent="Art"]
 self_modulate = Color(1, 1, 1, 0.8)
-position = Vector2(-15.36, -92.16)
 scale = Vector2(0.05, 0.05)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="EyeLeft" type="Node2D" parent="Body/Squash/Art"]
-position = Vector2(-38.4, -15.36)
+[node name="EyeLeft" type="Node2D" parent="Art"]
 
-[node name="White" type="Sprite2D" parent="Body/Squash/Art/EyeLeft"]
+[node name="White" type="Sprite2D" parent="Art/EyeLeft"]
 scale = Vector2(0.17, 0.22)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="Pupil" type="Sprite2D" parent="Body/Squash/Art/EyeLeft"]
+[node name="Pupil" type="Sprite2D" parent="Art/EyeLeft"]
 self_modulate = Color(0.0392, 0.0588, 0.1451, 1)
 scale = Vector2(0.09, 0.09)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="EyeRight" type="Node2D" parent="Body/Squash/Art"]
-position = Vector2(38.4, -15.36)
+[node name="EyeRight" type="Node2D" parent="Art"]
 
-[node name="White" type="Sprite2D" parent="Body/Squash/Art/EyeRight"]
+[node name="White" type="Sprite2D" parent="Art/EyeRight"]
 scale = Vector2(0.17, 0.22)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="Pupil" type="Sprite2D" parent="Body/Squash/Art/EyeRight"]
+[node name="Pupil" type="Sprite2D" parent="Art/EyeRight"]
 self_modulate = Color(0.0392, 0.0588, 0.1451, 1)
 scale = Vector2(0.09, 0.09)
 texture = SubResource("GradientTexture2D_circle")
