@@ -42,6 +42,7 @@ var _pre_players: Array[Vector2] = []
 var _pre_ball := Vector2.ZERO
 var _seen_touch: int = 0
 var _seen_point: int = 0
+var _seen_impact: int = 0
 
 
 func setup(sim: VolleySim, match_setup: MatchSetup, local_slots: Array[int]) -> void:
@@ -69,6 +70,7 @@ func setup(sim: VolleySim, match_setup: MatchSetup, local_slots: Array[int]) -> 
 	ball_view.setup(sim.param("ball_radius") * px_per_m)
 	_seen_touch = int(sim.state["touch_serial"])
 	_seen_point = int(sim.state["point_serial"])
+	_seen_impact = int(sim.state["balls"][0]["impact_serial"])
 	capture(int(sim.state["tick"]))
 	if not get_viewport().size_changed.is_connected(_on_viewport_resized):
 		get_viewport().size_changed.connect(_on_viewport_resized)
@@ -83,9 +85,15 @@ func capture(tick: int) -> void:
 		p.append(Vector2(float(player["x"]), float(player["y"])))
 		vy.append(float(player["vy"]))
 	var ball: Dictionary = state["balls"][0]
+	# A ball stuck to a blob rides it: no flight velocity, pressed flat on the blob side.
+	var ball_v := Vector2(float(ball["vx"]), float(ball["vy"]))
+	var press := Vector2.ZERO
+	if int(ball["stick"]) > 0:
+		ball_v = Vector2.ZERO
+		press = Vector2(float(ball["stick_dx"]), -float(ball["stick_dy"])).normalized()
 	_ring[tick % RING] = {
 		"tick": tick, "serve": _serve_number(state), "p": p, "vy": vy,
-		"b": Vector2(float(ball["x"]), float(ball["y"])), "bvx": float(ball["vx"]), "bf": bool(ball["frozen"]),
+		"b": Vector2(float(ball["x"]), float(ball["y"])), "bv": ball_v, "bp": press, "bf": bool(ball["frozen"]),
 	}
 	_latest = tick
 
@@ -123,7 +131,7 @@ func _process(delta: float) -> void:
 		var pos_m := _lerp_m(prev["p"][i], cur["p"][i], frac) + _smoother.offset(i)
 		var on_floor := pos_m.y <= _sim.param("blob_radius") + 0.01
 		_blobs[i].apply(to_px(pos_m), float(cur["vy"][i]), on_floor, floor_y, ball_px, delta)
-	ball_view.apply(ball_px, float(cur["bvx"]), bool(cur["bf"]), floor_y, px_per_m, delta)
+	ball_view.apply(ball_px, cur["bv"], bool(cur["bf"]), cur["bp"], floor_y, px_per_m, delta)
 	_smoother.step(delta)
 	_update_fx()
 
@@ -160,6 +168,12 @@ func _update_fx() -> void:
 		var team := int(_sim.state["point_team"])
 		court_view.flash_zone(_sim.zone_of(float(ball["x"])), palette.color(team))
 	_seen_point = point_serial
+	var ball_state: Dictionary = _sim.state["balls"][0]
+	var impact_serial := int(ball_state["impact_serial"])
+	if impact_serial > _seen_impact:
+		var push := Vector2(float(ball_state["impact_nx"]), -float(ball_state["impact_ny"]))
+		ball_view.impact(push, float(ball_state["impact_power"]))
+	_seen_impact = impact_serial
 
 
 func _layout() -> void:

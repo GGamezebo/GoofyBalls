@@ -128,3 +128,48 @@ func test_two_by_two_spreads_players() -> void:
 	var a := float(sim.state["players"][0]["x"])
 	var b := float(sim.state["players"][1]["x"])
 	expect(absf(a - b) > 1.0, "teammates start apart")
+
+
+func test_tar_ball_sticks_then_launches() -> void:
+	var sim := _new_sim()
+	var stick_ticks := int(sim.cfg["physics"]["ball_stick_ticks"])
+	var ball: Dictionary = sim.state["balls"][0]
+	var blob: Dictionary = sim.state["players"][0]
+	sim.state["phase"] = VolleySim.Phase.PLAY
+	ball["frozen"] = false
+	ball["x"] = float(blob["x"]) + 0.1
+	ball["y"] = float(blob["y"]) + 1.0
+	ball["vx"] = 0.0
+	ball["vy"] = -6.0
+	var touched_at := -1
+	for t in 20:
+		sim.step(_idle(sim))
+		ball = sim.state["balls"][0]
+		if touched_at < 0 and int(sim.state["touch_serial"]) > 0:
+			touched_at = t
+			expect_eq(int(ball["stick"]), stick_ticks, "ball sticks on the touch")
+			expect(int(ball["impact_serial"]) > 0, "touch squishes the ball")
+		if touched_at >= 0 and t == touched_at + stick_ticks:
+			break
+	expect(touched_at >= 0, "blob touched the ball")
+	expect_eq(int(ball["stick"]), 0, "stick runs out")
+	expect(float(ball["vy"]) > 0.0, "ball launched upwards")
+	expect_eq(int(sim.state["touch_count"]), 1, "one touch for the whole stick")
+
+
+func test_wall_bounce_is_soft_and_grips() -> void:
+	var sim := _new_sim()
+	var ball: Dictionary = sim.state["balls"][0]
+	sim.state["phase"] = VolleySim.Phase.PLAY
+	ball["frozen"] = false
+	var limit := float(sim.cfg["arena"]["half_width"]) - sim.param("ball_radius")
+	ball["x"] = limit - 0.05
+	ball["y"] = 4.0
+	ball["vx"] = 10.0
+	ball["vy"] = 5.0
+	for player in sim.state["players"]:
+		player["x"] = -6.0 if int(player["team"]) == 0 else 3.0
+	sim.step(_idle(sim))
+	ball = sim.state["balls"][0]
+	expect(float(ball["vx"]) < 0.0 and absf(float(ball["vx"])) <= 10.0 * sim.param("ball_bounce") + 0.01, "bounced back softer")
+	expect(float(ball["vy"]) < 5.0 * (1.0 - sim.param("ball_grip")) + 0.01, "wall grip slows the slide")

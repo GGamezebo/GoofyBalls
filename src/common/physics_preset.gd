@@ -14,8 +14,8 @@ extends Resource
 @export var snap_move: bool = true
 
 @export_group("Hit")
-@export var hit_speed: float = 8.0
-@export var hit_min_up: float = 4.0
+@export var hit_speed: float = 8.8
+@export var hit_min_up: float = 4.5
 @export var hit_reflect: float = 0.4
 @export var hit_push: float = 0.75
 @export var hit_floor_vy: float = -10.0
@@ -23,9 +23,17 @@ extends Resource
 
 @export_group("Ball")
 @export var ball_radius: float = 0.35
-@export var ball_gravity: float = 3.92
+## Tar ball (Gish): heavier than a beach ball, soft, a little sticky.
+@export var ball_gravity: float = 5.0
 @export var ball_damp: float = 0.115
-@export var ball_bounce: float = 0.78
+## Restitution along the normal on walls, ceiling and nets (soft: loses energy).
+@export var ball_bounce: float = 0.62
+## Share of the speed along a side wall / net the tar loses on contact (0 = slick, 1 = glued).
+## Keep it low: high grip slides the ball down the back wall into cheap 4-touch faults.
+@export var ball_grip: float = 0.15
+## Ticks the ball sticks to a blob after a touch before it is launched (0 = instant hit).
+## It rides along meanwhile, so moving / jumping while it sticks steers the shot.
+@export var ball_stick_ticks: int = 3
 @export var ball_max_speed: float = 38.0
 @export var ball_substeps: int = 4
 
@@ -38,5 +46,6 @@ func to_dict() -> Dictionary:
 		"hit_reflect": hit_reflect, "hit_push": hit_push, "hit_floor_vy": hit_floor_vy,
 		"touch_cooldown_ticks": touch_cooldown_ticks, "ball_radius": ball_radius,
 		"ball_gravity": ball_gravity, "ball_damp": ball_damp, "ball_bounce": ball_bounce,
+		"ball_grip": ball_grip, "ball_stick_ticks": ball_stick_ticks,
 		"ball_max_speed": ball_max_speed, "ball_substeps": ball_substeps,
 	}
