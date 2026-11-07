@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c4cktmay0md8q"]
 
-[ext_resource type="Script" path="res://src/features/ball_view/ball_view.gd" id="1_ball"]
+[ext_resource type="Script" uid="uid://dtwmbltcctd5l" path="res://src/features/ball_view/ball_view.gd" id="1_ball"]
 
 [sub_resource type="Gradient" id="Gradient_shadow"]
 offsets = PackedFloat32Array(0, 0.75, 1)
@@ -19,11 +19,9 @@ _data = [Vector2(0, 0.25), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
 point_count = 2
 
 [sub_resource type="Gradient" id="Gradient_trail"]
-offsets = PackedFloat32Array(0, 1)
 colors = PackedColorArray(1, 0.82, 0.04, 0, 1, 0.82, 0.04, 0.2)
 
 [sub_resource type="Gradient" id="Gradient_light"]
-offsets = PackedFloat32Array(0, 1)
 colors = PackedColorArray(1, 0.9647, 0.7608, 0.95, 1, 0.9647, 0.7608, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_light"]
@@ -34,7 +32,7 @@ fill = 1
 fill_from = Vector2(0.38, 0.33)
 fill_to = Vector2(0.72, 0.33)
 
-[node name="BallView" type="Node2D" node_paths=PackedStringArray("skin", "shine", "glow_outer", "glow_inner", "seam_a", "seam_b", "rim", "shadow", "trail")]
+[node name="BallView" type="Node2D" unique_id=1852744811 node_paths=PackedStringArray("skin", "shine", "glow_outer", "glow_inner", "seam_a", "seam_b", "rim", "shadow", "trail")]
 script = ExtResource("1_ball")
 skin = NodePath("Skin")
 shine = NodePath("Shine")
@@ -46,12 +44,12 @@ rim = NodePath("Rim")
 shadow = NodePath("Shadow")
 trail = NodePath("Trail")
 
-[node name="Shadow" type="Sprite2D" parent="."]
+[node name="Shadow" type="Sprite2D" parent="." unique_id=909769804]
 position = Vector2(0, 110)
 scale = Vector2(1, 0.2)
 texture = SubResource("GradientTexture2D_shadow")
 
-[node name="Trail" type="Line2D" parent="."]
+[node name="Trail" type="Line2D" parent="." unique_id=1735538869]
 top_level = true
 points = PackedVector2Array(-190, 46, -140, 26, -92, 12, -46, 3, 0, 0)
 width = 90.0
@@ -62,33 +60,41 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="GlowOuter" type="Polygon2D" parent="."]
+[node name="GlowOuter" type="Polygon2D" parent="." unique_id=2121453621]
 color = Color(1, 0.82, 0.04, 0.07)
+polygon = PackedVector2Array(92.8, 0, 88.26, 28.68, 75.08, 54.55, 54.55, 75.08, 28.68, 88.26, 0, 92.8, -28.68, 88.26, -54.55, 75.08, -75.08, 54.55, -88.26, 28.68, -92.8, 0, -88.26, -28.68, -75.08, -54.55, -54.55, -75.08, -28.68, -88.26, 0, -92.8, 28.68, -88.26, 54.55, -75.08, 75.08, -54.55, 88.26, -28.68)
 
-[node name="GlowInner" type="Polygon2D" parent="."]
+[node name="GlowInner" type="Polygon2D" parent="." unique_id=1740997976]
 color = Color(1, 0.82, 0.04, 0.14)
+polygon = PackedVector2Array(76.8, 0, 73.04, 23.73, 62.13, 45.14, 45.14, 62.13, 23.73, 73.04, 0, 76.8, -23.73, 73.04, -45.14, 62.13, -62.13, 45.14, -73.04, 23.73, -76.8, 0, -73.04, -23.73, -62.13, -45.14, -45.14, -62.13, -23.73, -73.04, 0, -76.8, 23.73, -73.04, 45.14, -62.13, 62.13, -45.14, 73.04, -23.73)
 
-[node name="Skin" type="Polygon2D" parent="."]
+[node name="Skin" type="Polygon2D" parent="." unique_id=1600778661]
 color = Color(1, 0.8235, 0.0392, 1)
+polygon = PackedVector2Array(64, 0, 60.87, 19.78, 51.78, 37.62, 37.62, 51.78, 19.78, 60.87, 0, 64, -19.78, 60.87, -37.62, 51.78, -51.78, 37.62, -60.87, 19.78, -64, 0, -60.87, -19.78, -51.78, -37.62, -37.62, -51.78, -19.78, -60.87, 0, -64, 19.78, -60.87, 37.62, -51.78, 51.78, -37.62, 60.87, -19.78)
 
-[node name="Shine" type="Polygon2D" parent="."]
+[node name="Shine" type="Polygon2D" parent="." unique_id=390082706]
 texture = SubResource("GradientTexture2D_light")
+polygon = PackedVector2Array(64, 0, 60.87, 19.78, 51.78, 37.62, 37.62, 51.78, 19.78, 60.87, 0, 64, -19.78, 60.87, -37.62, 51.78, -51.78, 37.62, -60.87, 19.78, -64, 0, -60.87, -19.78, -51.78, -37.62, -37.62, -51.78, -19.78, -60.87, 0, -64, 19.78, -60.87, 37.62, -51.78, 51.78, -37.62, 60.87, -19.78)
+uv = PackedVector2Array(128, 64, 124.87, 83.78, 115.78, 101.62, 101.62, 115.78, 83.78, 124.87, 64, 128, 44.22, 124.87, 26.38, 115.78, 12.22, 101.62, 3.13, 83.78, 0, 64, 3.13, 44.22, 12.22, 26.38, 26.38, 12.22, 44.22, 3.13, 64, 0, 83.78, 3.13, 101.62, 12.22, 115.78, 26.38, 124.87, 44.22)
 
-[node name="SeamA" type="Line2D" parent="."]
+[node name="SeamA" type="Line2D" parent="." unique_id=911392773]
+points = PackedVector2Array(27.76, 37.6, 22.48, 32.72, 17.98, 27.1, 14.38, 20.88, 11.74, 14.18, 10.14, 7.17, 9.6, 0, 10.14, -7.17, 11.74, -14.18, 14.38, -20.88, 17.98, -27.1, 22.48, -32.72, 27.76, -37.6)
 width = 5.12
 default_color = Color(0.6902, 0.4824, 0, 0.6)
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="SeamB" type="Line2D" parent="."]
+[node name="SeamB" type="Line2D" parent="." unique_id=344467415]
+points = PackedVector2Array(-27.76, -37.6, -22.48, -32.72, -17.98, -27.1, -14.38, -20.88, -11.74, -14.18, -10.14, -7.17, -9.6, 0, -10.14, 7.17, -11.74, 14.18, -14.38, 20.88, -17.98, 27.1, -22.48, 32.72, -27.76, 37.6)
 width = 5.12
 default_color = Color(0.6902, 0.4824, 0, 0.6)
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Rim" type="Line2D" parent="."]
+[node name="Rim" type="Line2D" parent="." unique_id=845837500]
+points = PackedVector2Array(60.16, 0, 57.22, 18.59, 48.67, 35.36, 35.36, 48.67, 18.59, 57.22, 0, 60.16, -18.59, 57.22, -35.36, 48.67, -48.67, 35.36, -57.22, 18.59, -60.16, 0, -57.22, -18.59, -48.67, -35.36, 0, -13, -18.59, -57.22, 0, -60.16, 18.59, -57.22, 35.36, -48.67, 48.67, -35.36, 57.22, -18.59, 60.16, 0)
 width = 7.68
 default_color = Color(0.7882, 0.5608, 0, 1)
 antialiased = true

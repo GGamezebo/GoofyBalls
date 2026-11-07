@@ -24,6 +24,14 @@ extends Node2D
 ## Stretch along the flight per m/s of speed, and the longest stretch.
 @export var stretch_per_mps: float = 0.012
 @export var max_stretch: float = 1.22
+@export_group("Shape")
+## Glow ring sizes and the rim's ring size, relative to the body.
+@export var glow_outer_scale: float = 1.45
+@export var glow_inner_scale: float = 1.2
+@export var rim_scale: float = 0.94
+## Line widths as shares of the radius.
+@export var seam_width_ratio: float = 0.08
+@export var rim_width_ratio: float = 0.12
 @export_group("Trail")
 @export var trail_points: int = 5
 @export var trail_spacing_px: float = 14.0
@@ -119,10 +127,12 @@ func _init_ring() -> void:
 	_uvs.resize(ring_points)
 	_off.resize(ring_points)
 	_vel.resize(ring_points)
+	# Polygon2D UVs are in texture pixels.
+	var uv_size := shine.texture.get_size() if shine.texture != null else Vector2.ONE
 	for i in ring_points:
 		var angle := TAU * float(i) / float(ring_points)
 		_dirs[i] = Vector2(cos(angle), sin(angle))
-		_uvs[i] = Vector2(0.5, 0.5) + _dirs[i] * 0.5
+		_uvs[i] = (Vector2(0.5, 0.5) + _dirs[i] * 0.5) * uv_size
 	_off.fill(0.0)
 	_vel.fill(0.0)
 
@@ -197,8 +207,8 @@ func _update_shapes() -> void:
 	skin.polygon = body
 	shine.polygon = body
 	shine.uv = _uvs
-	glow_outer.polygon = _ring(1.45)
-	glow_inner.polygon = _ring(1.2)
+	glow_outer.polygon = _ring(glow_outer_scale)
+	glow_inner.polygon = _ring(glow_inner_scale)
 	for k in 2:
 		var seam := seam_a if k == 0 else seam_b
 		var angle := _spin + PI * float(k)
@@ -208,11 +218,11 @@ func _update_shapes() -> void:
 			var a := angle + PI - 0.9 + 1.8 * float(j) / 12.0
 			arc.append(_warp(center + Vector2(cos(a), sin(a)) * 0.75))
 		seam.points = arc
-		seam.width = r * 0.08
-	var rim_points := _ring(0.94)
+		seam.width = r * seam_width_ratio
+	var rim_points := _ring(rim_scale)
 	rim_points.append(rim_points[0])
 	rim.points = rim_points
-	rim.width = r * 0.12
+	rim.width = r * rim_width_ratio
 
 
 func _update_shadow(floor_offset: float) -> void:

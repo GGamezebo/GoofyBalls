@@ -43,7 +43,10 @@ extends Node2D
 @export_range(0.0, 1.0) var shadow_min_fade: float = 0.15
 ## Shadow size at the faintest, relative to the size on the floor.
 @export_range(0.0, 1.0) var shadow_min_size: float = 0.63
-@export_group("Outline")
+@export_group("Shape")
+## Halo ring sizes, relative to the body.
+@export var halo_outer_scale: float = 1.2
+@export var halo_inner_scale: float = 1.09
 ## Outline width as a share of the radius.
 @export var outline_ratio: float = 0.07
 @export_group("Team color")
@@ -72,11 +75,6 @@ extends Node2D
 @export var tinted_light: Array[CanvasItem] = []
 @export var name_label: Label
 
-## Ring sizes of the halo, relative to the body.
-const HALO_OUTER := 1.2
-const HALO_INNER := 1.09
-const GOO_STRANDS := 3
-
 var color: Color = Color("#03B8FF")
 var radius_px: float = 128.0:
 	set(value):
@@ -86,6 +84,9 @@ var radius_px: float = 128.0:
 var _shadow_scale := Vector2.ONE
 var _shadow_alpha: float = 1.0
 var _pupil_rest: Array[Vector2] = []
+var _eye_units: Array[Vector2] = []
+var _shine_unit := Vector2.ZERO
+var _sparkle_unit := Vector2.ZERO
 var _goo_lines: Array[Line2D] = []
 var _was_on_floor: bool = true
 var _on_floor: bool = true
@@ -106,6 +107,11 @@ func _ready() -> void:
 	_shadow_alpha = shadow.modulate.a
 	for pupil in pupils:
 		_pupil_rest.append(pupil.position)
+	# Face features sit where they are placed in the scene and ride the ring from there.
+	for eye in eyes:
+		_eye_units.append(eye.position / design_radius_px)
+	_shine_unit = shine.position / design_radius_px
+	_sparkle_unit = sparkle.position / design_radius_px
 	for child in goo.get_children():
 		_goo_lines.append(child)
 	_init_ring()
@@ -173,10 +179,12 @@ func _init_ring() -> void:
 	_uvs.resize(ring_points)
 	_off.resize(ring_points)
 	_ring_v.resize(ring_points)
+	# Polygon2D UVs are in texture pixels.
+	var uv_size := light.texture.get_size() if light.texture != null else Vector2.ONE
 	for i in ring_points:
 		var angle := TAU * float(i) / float(ring_points)
 		_dirs[i] = Vector2(cos(angle), sin(angle))
-		_uvs[i] = Vector2(0.5, 0.5) + _dirs[i] * 0.5
+		_uvs[i] = (Vector2(0.5, 0.5) + _dirs[i] * 0.5) * uv_size
 	_off.fill(0.0)
 	_ring_v.fill(0.0)
 
@@ -264,17 +272,16 @@ func _update_nodes() -> void:
 	skin.polygon = body
 	light.polygon = body
 	light.uv = _uvs
-	halo_outer.polygon = _ring(HALO_OUTER)
-	halo_inner.polygon = _ring(HALO_INNER)
+	halo_outer.polygon = _ring(halo_outer_scale)
+	halo_inner.polygon = _ring(halo_inner_scale)
 	var outline_points := _ring(1.0 - outline_ratio * 0.5)
 	outline_points.append(outline_points[0])
 	outline.points = outline_points
 	outline.width = design_radius_px * outline_ratio
-	shine.position = _warp(Vector2(-0.4, -0.5))
-	sparkle.position = _warp(Vector2(-0.12, -0.72))
+	shine.position = _warp(_shine_unit)
+	sparkle.position = _warp(_sparkle_unit)
 	for side in eyes.size():
-		var unit := Vector2(-0.3 if side == 0 else 0.3, -0.12)
-		eyes[side].position = _warp(unit)
+		eyes[side].position = _warp(_eye_units[side])
 		pupils[side].position = _pupil_rest[side] + _look * pupil_travel_px
 	_update_goo()
 
@@ -284,7 +291,7 @@ func _update_goo() -> void:
 	if not goo.visible:
 		return
 	var side := float(_cling)
-	for k in GOO_STRANDS:
+	for k in _goo_lines.size():
 		var y := (float(k) - 1.0) * 0.45
 		var root := _warp(Vector2(side * sqrt(1.0 - y * y) * 0.9, y))
 		var tip := root + Vector2(side * goo_reach * design_radius_px * _goo_t, 0.06 * design_radius_px * float(k - 1))
