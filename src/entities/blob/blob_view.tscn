@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/features/blob_view/blob_view.gd" id="1_blob"]
+[ext_resource type="Script" path="res://src/entities/blob/blob_view.gd" id="1_blob"]
+[ext_resource type="Script" path="res://src/entities/components/floor_shadow/floor_shadow.gd" id="2_shadow"]
+[ext_resource type="Resource" path="res://src/entities/blob/blob_soft_ring.tres" id="3_ring"]
 
 [sub_resource type="Gradient" id="Gradient_shadow"]
 offsets = PackedFloat32Array(0, 0.8, 1)
@@ -40,6 +42,7 @@ fill_to = Vector2(0.72, 0.35)
 
 [node name="BlobView" type="Node2D" node_paths=PackedStringArray("art", "goo", "halo_outer", "halo_inner", "skin", "light", "outline", "shine", "sparkle", "eyes", "pupils", "shadow", "tinted", "tinted_light", "name_label")]
 script = ExtResource("1_blob")
+ring_config = ExtResource("3_ring")
 art = NodePath("Art")
 goo = NodePath("Art/Goo")
 halo_outer = NodePath("Art/HaloOuter")
@@ -60,6 +63,10 @@ name_label = NodePath("NameLabel")
 position = Vector2(0, 128)
 scale = Vector2(0.95, 0.171)
 texture = SubResource("GradientTexture2D_shadow")
+script = ExtResource("2_shadow")
+fade_radii = 6.0
+min_fade = 0.15
+min_size = 0.63
 
 [node name="Art" type="Node2D" parent="."]
 

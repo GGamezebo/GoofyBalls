@@ -198,7 +198,7 @@ godot --headless --path . --script res://tests/e2e/nakama_peer.gd -- role=guest 
 |---|---|
 | Физика: бег, прыжок, управление в воздухе, удар (сила, отскок, перенос скорости блоба в мяч), мяч | `src/common/presets/physics_classic.tres` |
 | Бот: где стоит, как быстро бегает, когда прыгает | `src/features/ai_opponent/ai_normal.tres` (бой берёт его из `Game.ai_profile`) |
-| Вид мяча, блоба, корта и сетки | `src/features/ball_view/`, `blob_view/`, `court_view/` (`.tscn`, ноды) |
+| Вид мяча, блоба, корта и сетки | `src/entities/ball/`, `src/entities/blob/`, `src/features/court_view/` (`.tscn`, ноды); общее кольцо — `core/lib/soft_ring/`, тень — `src/entities/components/floor_shadow/` |
 | Сглаживание после отката | `MatchView` в `src/game/scenes/game/game.tscn` |
 | Корт (ширина, сетка, высота подачи) | `src/common/presets/arena_s.tres` |
 | Правила (до скольких очков, касания, паузы) | `src/common/presets/rules_points_7.tres` |

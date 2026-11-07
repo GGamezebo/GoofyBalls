@@ -8,7 +8,7 @@
 [ext_resource type="Resource" path="res://src/common/setups/vs_ai.tres" id="6_setup"]
 [ext_resource type="Theme" path="res://src/ui/theme/goofy_theme.tres" id="7_th"]
 [ext_resource type="PackedScene" path="res://src/ui/background/neon_background.tscn" id="8_bg"]
-[ext_resource type="PackedScene" path="res://src/features/blob_view/blob_view.tscn" id="9_blob"]
+[ext_resource type="PackedScene" path="res://src/entities/blob/blob_view.tscn" id="9_blob"]
 
 [node name="PostBattle" type="Control" node_paths=PackedStringArray("title_label", "score_label", "subtitle_label", "status_label", "rematch_button", "next_button", "hero_blob")]
 layout_mode = 3

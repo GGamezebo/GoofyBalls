@@ -1,7 +1,7 @@
 # Architecture (always) — same as quizmatik
 Reference implementation: `D:\Godot\MyProjects\quizmatik` (`GGamezebo/quizmatik`), rules in its `.claude/rules/godot-paradigm.md` + `architecture.md`. In doubt → copy its pattern; never invent a parallel system.
 Layers (code split by layer; deps point down only):
-- `src/game/` HFSM bootstrap, contexts, scenes (orchestration only) → `src/features/` isolated features → `src/ui/`, `src/common/` shared game widgets/Resources → `core/` project-agnostic libs (never import `src/`).
+- `src/game/` HFSM bootstrap, contexts, scenes (orchestration only) → `src/features/` isolated features / `src/entities/` entities built from `src/entities/components/` (`entities.md`) → `src/ui/`, `src/common/` shared game widgets/Resources → `core/` project-agnostic libs (never import `src/`).
 HFSM:
 - HFSM creates states, mounts their scenes, drives all transitions between app phases/scenes.
 - Each large context = own HFSM state + scene: phases, platforms, onboarding/tutorial, server-driven features. Host scenes expose only passive hooks (Resource `ev_*`).
@@ -18,7 +18,7 @@ No singletons:
 - No autoloads, static global state, or self-registering instances. Only third-party plugins may bring one (rollback `SyncManager`).
 Reuse placement:
 - Generic and truly project-independent (patterns, utils; e.g. `hfsm`, `fsm`, `EventListener`) → `core/lib/{name}/`. Mixed code → split: generic part to `core/`, game wiring in `src/`.
-- Reusable but game-dependent → components in `src/`.
+- Reusable but game-dependent entity parts → `src/entities/components/{name}/` (`entities.md`).
 - Exception: features keep all their deps inside their folder, even if duplicated.
 Components:
 - Split big objects into small components by logical responsibility.
