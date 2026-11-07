@@ -3,7 +3,7 @@
 Folders (pick the first that fits; create a folder only on its first real use):
 - `core/lib/{name}/` — stateless patterns, utils, pure math: `hfsm`, `EventListener`, `ResourceUtils`, `window_stack_manager`, `log`, `soft_ring`; later `fsm`, easing, deterministic RNG.
 - `core/systems/{name}/` — self-contained subsystems with own state + default `.tres` (quizmatik `user_settings`): `user_settings`, `save`, `audio`, `input_remap`. Node or Resource the owner gets via `@export`, never an autoload.
-- `core/theme/` — base `Theme`, fonts, `StyleBox` (`style.tres`) for all UI. Game-specific look (goofy style) → `src/ui/`.
+- `core/theme/` — neutral base `Theme`/`StyleBox` with no game palette or `assets/` refs (none yet). Game theme (palette, Nunito, goofy style) → `src/ui/theme/goofy_theme.tres`.
 - `core/shaders/` — generic shaders/`ShaderMaterial` presets: outline, flash, dissolve, blur. Entity-specific shader stays with the entity.
 - `core/editor/` — generic `@tool` helpers, editor previews, inspectors. Full `EditorPlugin`s live in `addons/` (Godot convention).
 - `core/net/` — transport/net utils with no game or backend knowledge (input buffers, packet codecs, lag emulation math). Nakama rooms/sessions → `src/features/online`, rollback wiring → `src/features/match_session`.

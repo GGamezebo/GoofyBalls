@@ -19,11 +19,11 @@
 | `src/entities/{name}/` | Игровые сущности, собранные из общих компонентов: `blob`, `ball`. Друг друга не импортируют |
 | `src/entities/components/{name}/` | Общие компоненты сущностей, зависящие от игры: `floor_shadow`. Используются только сущностями |
 | `src/common/` | Общие ресурсы: пресеты физики, арены, правила, персонажи, `MatchSetup` |
-| `src/ui/` | Общие виджеты (кнопки, диалоги, загрузка) |
+| `src/ui/` | Общий UI игры: виджеты (кнопки, диалоги, загрузка, фон) и тема `theme/goofy_theme.tres` (подключена в `project.godot`) |
 | `src/game/account/` | Прогресс, статистика, сохранения |
 | `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `log`, `soft_ring` (из quizmatik; `fsm`, `shackers` — когда понадобятся) |
 | `core/systems/` | Готовые подсистемы со своим состоянием и `.tres` по умолчанию: настройки, сохранения, звук, переназначение управления (как `user_settings` в quizmatik). Без автолоадов |
-| `core/theme/` | Базовая тема UI: `Theme`, шрифты, `StyleBox`. Стиль, специфичный для игры, — в `src/ui/` |
+| `core/theme/` | Базовая тема UI: `Theme`, шрифты, `StyleBox`. Стиль, специфичный для игры, — в `src/ui/theme/` |
 | `core/shaders/`, `core/editor/`, `core/net/` | Заводятся при первой необходимости: универсальные шейдеры; `@tool`-помощники редактора (плагины — в `addons/`); сетевые утилиты без знания игры и Nakama. Правило — `.claude/rules/core.md` |
 | `addons/` | `hfsm_editor`, Nakama, `godot-rollback-netcode`, `webrtc_native` (WebRTC для ПК и Android) |
 | `server/`, `tests/`, `tools/`, `concept/` | Сервер, headless-тесты, генераторы, арты |
