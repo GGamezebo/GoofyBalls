@@ -10,7 +10,7 @@ Placement (pick the first that fits):
 - Works in any project unchanged (pure math/pattern, e.g. `SoftRing`) → `core/lib/{name}/`.
 - Shared by ≥2 entities, game-dependent → `src/entities/components/{name}/`.
 - Used by one entity → stays inside that entity.
-- Shared UI widget → `src/ui/`; shared data/presets → `src/common/`.
+- Shared UI widget or the game theme → `src/ui/`; shared data/presets → `src/common/`.
 Component shape:
 - One responsibility; `class_name`; Node (with its node skeleton in the entity `.tscn`) or `RefCounted` for pure logic.
 - Tuning numbers in a config `Resource` (`@export` + `##`), default `.tres` next to the entity that uses it; runtime state in the component, never written into the shared `.tres`.
