@@ -4,7 +4,7 @@ Layout:
 - `src/game/scenes/{app_root,online,menu,game,post_battle}` orchestration only (`online` = App/Online context: Nakama rooms, lives beside Menu/Battle)
 - `src/features/{name}/` isolated features (.gd+.tscn colocated): `volley_sim` (+`buffs/`), `match_session` (Local/Rollback, net tuning, lag emulation), `court_view`, `buff_fx`, `online`, `net_overlay`, `virtual_controls`, `ai_opponent`
 - `src/entities/{blob,ball}/` entities built from shared components · `src/entities/components/{floor_shadow}/` their shared parts (`entities.md`)
-- `src/common/` shared Resources/presets (.tres) · `src/ui/` shared game UI: widgets + theme (`src/ui/theme/`) · `core/` project-agnostic libs (never import `src/`) · `server/` Nakama · `tests/` headless · `tools/` generators · `concept/` art (Godot-ignored)
+- `src/common/` shared Resources/presets (.tres) · `src/ui/{theme,components,dialogs,overlays,backgrounds}/` shared game UI (`ui.md`) · `core/` project-agnostic libs (never import `src/`) · `server/` Nakama · `tests/` headless · `tools/` generators · `concept/` art (Godot-ignored)
 Must:
 - Feature talks out only via `ev_*` signals + `initialize`/`setup`; never import another feature's internals; scenes compose features.
 - Every scene runs alone (F6): defaults in exported `.tres`; parent overrides via event → `initialize(data)` → `ResourceUtils.update_resource`.

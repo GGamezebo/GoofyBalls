@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ui/loading_screen/loading_screen.gd" id="1_ls"]
-[ext_resource type="PackedScene" path="res://src/ui/background/neon_background.tscn" id="2_bg"]
+[ext_resource type="Script" path="res://src/ui/overlays/loading_screen/loading_screen.gd" id="1_ls"]
+[ext_resource type="PackedScene" path="res://src/ui/backgrounds/neon_background/neon_background.tscn" id="2_bg"]
 [ext_resource type="Theme" path="res://src/ui/theme/goofy_theme.tres" id="3_th"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_track"]

@@ -14,7 +14,7 @@
 [ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_4g.tres" id="11_l2"]
 [ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_bad.tres" id="12_l3"]
 [ext_resource type="Resource" path="res://src/features/volley_sim/determinism_probe.tres" id="13_probe"]
-[ext_resource type="PackedScene" path="res://src/ui/background/neon_background.tscn" id="14_bg"]
+[ext_resource type="PackedScene" path="res://src/ui/backgrounds/neon_background/neon_background.tscn" id="14_bg"]
 [ext_resource type="Script" uid="uid://sfgo7sr8r0jm" path="res://src/game/scenes/game/match_view.gd" id="15_mv"]
 [ext_resource type="PackedScene" path="res://src/features/court_view/court_view.tscn" id="16_court"]
 [ext_resource type="PackedScene" path="res://src/entities/ball/ball_view.tscn" id="17_ball"]

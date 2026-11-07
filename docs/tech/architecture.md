@@ -19,7 +19,7 @@
 | `src/entities/{name}/` | Игровые сущности, собранные из общих компонентов: `blob`, `ball`. Друг друга не импортируют |
 | `src/entities/components/{name}/` | Общие компоненты сущностей, зависящие от игры: `floor_shadow`. Используются только сущностями |
 | `src/common/` | Общие ресурсы: пресеты физики, арены, правила, персонажи, `MatchSetup` |
-| `src/ui/` | Общий UI игры: виджеты (кнопки, диалоги, загрузка, фон) и тема `theme/goofy_theme.tres` (подключена в `project.godot`) |
+| `src/ui/` | Общий UI игры (нужен ≥2 экранам): `theme/` (`goofy_theme.tres` с вариантами `PrimaryButton`, `CardPanel` и др.), `components/` (кнопки, чипы, счётчики), `dialogs/` (модалки и шиты), `overlays/` (`loading_screen`), `backgrounds/` (`neon_background`). UI одного экрана лежит рядом с ним. Правило — `.claude/rules/ui.md` |
 | `src/game/account/` | Прогресс, статистика, сохранения |
 | `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `log`, `soft_ring` (из quizmatik; `fsm`, `shackers` — когда понадобятся) |
 | `core/systems/` | Готовые подсистемы со своим состоянием и `.tres` по умолчанию: настройки, сохранения, звук, переназначение управления (как `user_settings` в quizmatik). Без автолоадов |
