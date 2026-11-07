@@ -20,6 +20,9 @@
 | `src/ui/` | Общие виджеты (кнопки, диалоги, загрузка) |
 | `src/game/account/` | Прогресс, статистика, сохранения |
 | `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `log` (из quizmatik; `fsm`, `shackers` — когда понадобятся) |
+| `core/systems/` | Готовые подсистемы со своим состоянием и `.tres` по умолчанию: настройки, сохранения, звук, переназначение управления (как `user_settings` в quizmatik). Без автолоадов |
+| `core/theme/` | Базовая тема UI: `Theme`, шрифты, `StyleBox`. Стиль, специфичный для игры, — в `src/ui/` |
+| `core/shaders/`, `core/editor/`, `core/net/` | Заводятся при первой необходимости: универсальные шейдеры; `@tool`-помощники редактора (плагины — в `addons/`); сетевые утилиты без знания игры и Nakama. Правило — `.claude/rules/core.md` |
 | `addons/` | `hfsm_editor`, Nakama, `godot-rollback-netcode`, `webrtc_native` (WebRTC для ПК и Android) |
 | `server/`, `tests/`, `tools/`, `concept/` | Сервер, headless-тесты, генераторы, арты |
 
