@@ -253,15 +253,15 @@ func _warp(p: Vector2) -> Vector2:
 	var angle := fposmod(p.angle(), TAU) / TAU * float(n)
 	var i0 := int(angle) % n
 	var t := angle - floorf(angle)
-	var scale := 1.0 + lerpf(_off[i0], _off[(i0 + 1) % n], t)
-	return p * design_radius_px * scale + _shift
+	var stretch := 1.0 + lerpf(_off[i0], _off[(i0 + 1) % n], t)
+	return p * design_radius_px * stretch + _shift
 
 
-func _ring(scale: float) -> PackedVector2Array:
+func _ring(ring_scale: float) -> PackedVector2Array:
 	var points := PackedVector2Array()
 	points.resize(_dirs.size())
 	for i in _dirs.size():
-		points[i] = _dirs[i] * design_radius_px * (1.0 + _off[i]) * scale + _shift
+		points[i] = _dirs[i] * design_radius_px * (1.0 + _off[i]) * ring_scale + _shift
 	return points
 
 
