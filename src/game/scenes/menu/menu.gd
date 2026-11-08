@@ -20,7 +20,6 @@ extends IScene
 
 var _listener := EventListener.new()
 var _log: LogChannel
-var _room_pending: bool = false
 var _hero_time: float = 0.0
 var _hero_base := Vector2.ZERO
 
@@ -72,14 +71,12 @@ func _start_local(template: MatchSetup) -> void:
 
 
 func _on_create_pressed() -> void:
-	_room_pending = true
 	friend_window.set_busy(true)
 	friend_window.set_status("Подключаемся к серверу…", false)
 	online_events.ev_create_room.emit()
 
 
 func _on_join_pressed(code: String) -> void:
-	_room_pending = true
 	friend_window.set_busy(true)
 	friend_window.set_status("Ищем комнату %s…" % code, false)
 	online_events.ev_join_room.emit(code)
@@ -91,15 +88,13 @@ func _on_room_created(code: String) -> void:
 
 
 func _on_room_error(text: String) -> void:
-	_room_pending = false
 	friend_window.set_busy(false)
 	friend_window.set_status(text, true)
 
 
+## Closing the window drops a room that was being opened (no-op when there is none).
 func _on_friend_closed() -> void:
-	if _room_pending:
-		_room_pending = false
-		online_events.ev_leave_room.emit()
+	online_events.ev_leave_room.emit()
 
 
 func _on_server_submitted(address: String) -> void:

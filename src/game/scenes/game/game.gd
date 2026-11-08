@@ -5,7 +5,6 @@ extends IScene
 ## F6: plays the exported default setup (vs AI) on its own.
 
 @export var root_events: RootEvents
-@export var online_events: OnlineEvents
 @export var game_events: GameEvents
 @export var default_setup: MatchSetup
 @export var palette: TeamPalette
@@ -193,8 +192,7 @@ func _on_exit_requested() -> void:
 	_finished = true
 	_log.info("match_exit_by_player", {"tick": int(_sim.state["tick"])})
 	_session.leave()
-	if _online:
-		online_events.ev_leave_room.emit()
+	# Back to the menu closes an online room by itself (HFSM App/Online/Room).
 	root_events.ev_return_to_menu.emit({})
 
 

@@ -13,7 +13,14 @@
 			},
 			"Online": {
 				"scene": { "id": "online", "async_loading": false },
-				"enter": ["ev.open_online"]
+				"enter": ["ev.open_online"],
+				"states": {
+					"Room": {
+						"scene": { "id": "room", "async_loading": false },
+						"enter": ["ev.open_room"],
+						"leave": ["ev.open_menu", "ev.close_room"]
+					}
+				}
 			},
 			"Menu": {
 				"scene": { "id": "menu", "loading_screen": true, "preload": ["game"] },

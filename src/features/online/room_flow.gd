@@ -132,6 +132,9 @@ func request_rematch() -> void:
 	_check_rematch()
 
 
+## Synchronous on purpose: the room scene is freed right after this (HFSM unmount), so nothing
+## may wait on the server here. Closing the socket is enough — Nakama drops our presence from
+## the relayed match and the other peer gets `peer_disconnected`.
 func leave() -> void:
 	if _state == State.IDLE and _socket == null:
 		return
@@ -142,7 +145,6 @@ func leave() -> void:
 	_rematch.clear()
 	_p2p_wait_left = -1.0
 	_close_transport()
-	var bridge := _bridge
 	var socket := _socket
 	_bridge = null
 	_socket = null
@@ -150,8 +152,6 @@ func leave() -> void:
 	if is_inside_tree():
 		_disconnect_multiplayer_signals()
 		multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
-		if bridge != null:
-			await bridge.leave()
 	if socket != null:
 		socket.close()
 
@@ -266,7 +266,7 @@ func _no_server_text() -> String:
 
 func _fail(event: String, text: String, kv: Dictionary) -> void:
 	_log.warn(event, kv)
-	await leave()
+	leave()
 	ev_error.emit(text)
 
 
@@ -376,7 +376,7 @@ func _rpc_rematch() -> void:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_room_full() -> void:
 	_log.warn("room_full")
-	await leave()
+	leave()
 	ev_error.emit("Комната занята: в ней уже двое")
 
 

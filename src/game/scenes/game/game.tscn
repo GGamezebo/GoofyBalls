@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://d2nk4e537poh1" path="res://src/game/scenes/game/game.gd" id="1_game"]
 [ext_resource type="Resource" path="res://src/game/scenes/app_root/root_events.tres" id="2_root_ev"]
-[ext_resource type="Resource" path="res://src/game/scenes/online/online_events.tres" id="3_online_ev"]
 [ext_resource type="Resource" path="res://src/game/scenes/game/game_events.tres" id="4_game_ev"]
 [ext_resource type="Resource" path="res://src/common/setups/vs_ai.tres" id="5_setup"]
 [ext_resource type="Resource" path="res://src/common/team_palette.tres" id="6_pal"]
@@ -28,7 +27,6 @@
 [node name="Game" type="Node" unique_id=2146771662 node_paths=PackedStringArray("match_view", "hud", "session_parent")]
 script = ExtResource("1_game")
 root_events = ExtResource("2_root_ev")
-online_events = ExtResource("3_online_ev")
 game_events = ExtResource("4_game_ev")
 default_setup = ExtResource("5_setup")
 palette = ExtResource("6_pal")

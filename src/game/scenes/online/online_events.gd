@@ -9,7 +9,8 @@ extends Resource
 signal ev_create_room
 @warning_ignore("unused_signal")
 signal ev_join_room(code: String)
-## Leave the room / match and drop the realtime connection.
+## Drop the room being opened (friend window closed). Going back to the menu closes a room by
+## itself (HFSM App/Online/Room leaves on `ev.open_menu`), nobody has to send this then.
 @warning_ignore("unused_signal")
 signal ev_leave_room
 @warning_ignore("unused_signal")

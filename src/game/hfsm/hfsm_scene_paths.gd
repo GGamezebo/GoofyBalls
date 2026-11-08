@@ -6,6 +6,7 @@ extends Node
 @export_category("Scenes")
 @export_file("*.tscn") var app_root: String = "res://src/game/scenes/app_root/root.tscn"
 @export_file("*.tscn") var online: String = "res://src/game/scenes/online/online.tscn"
+@export_file("*.tscn") var room: String = "res://src/game/scenes/room/room.tscn"
 @export_file("*.tscn") var menu: String = "res://src/game/scenes/menu/menu.tscn"
 @export_file("*.tscn") var game: String = "res://src/game/scenes/game/game.tscn"
 @export_file("*.tscn") var post_battle: String = "res://src/game/scenes/post_battle/post_battle.tscn"

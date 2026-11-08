@@ -103,9 +103,8 @@ func _on_rematch() -> void:
 	root_events.ev_start_game.emit({"match_setup": next})
 
 
+## Back to the menu closes an online room by itself (HFSM App/Online/Room).
 func _on_next() -> void:
-	if _online:
-		online_events.ev_leave_room.emit()
 	root_events.ev_return_to_menu.emit({})
 
 
