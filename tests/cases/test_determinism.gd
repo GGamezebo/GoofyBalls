@@ -4,7 +4,7 @@ extends TestCase
 ## the recorded cross-platform probe hash still matches on this machine.
 
 const SETUP_PATH := "res://src/common/setups/local_2p.tres"
-const PROBE_PATH := "res://src/features/volley_sim/determinism_probe.tres"
+const PROBE_PATH := "res://src/game/scenes/game/volley_sim/determinism_probe.tres"
 
 
 func _run(ticks: int, seed_value: int) -> int:

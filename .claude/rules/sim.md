@@ -1,6 +1,6 @@
 ---
 paths:
-  - "src/features/volley_sim/**"
+  - "src/game/scenes/game/volley_sim/**"
   - "tests/**"
 ---
 # volley_sim (deterministic, rollback-safe)

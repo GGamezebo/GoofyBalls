@@ -14,7 +14,7 @@
 |---|---|
 | Каркас как в quizmatik: `main.tscn` → HFSM (`App` → `Menu` / `Battle` / `PostBattle`, параллельно `Platform` и `Online`) | `src/game/main.gd`, `src/game/hfsm/app_hfsm.json`, `src/game/scenes/app_root/` |
 | Платформенные контексты: на PC доступна игра вдвоём, на Android — нет | `src/game/contexts/` → `PlatformCaps` |
-| Детерминированная симуляция: N команд × N игроков (зоны и сетки), подача, очки до 7, лимит 3 касания, xorshift-RNG, save/load/hash | `src/features/volley_sim/` |
+| Детерминированная симуляция: N команд × N игроков (зоны и сетки), подача, очки до 7, лимит 3 касания, xorshift-RNG, save/load/hash | `src/game/scenes/game/volley_sim/` |
 | Бот: предсказывает, где упадёт мяч, встаёт чуть позади и прыгает | `src/features/ai_opponent/` |
 | Сессии: `LocalSession` (против AI, вдвоём) и `RollbackSession` (SyncManager поверх Nakama relay) | `src/features/match_session/` |
 | Настройки rollback в `.tres`: задержка ввода 2 тика, буфер 60 тиков (1 с), до 10 с на восстановление синхронизации | `src/features/match_session/net_tuning.tres` |
@@ -187,7 +187,7 @@ godot --headless --path . --script res://tests/e2e/nakama_peer.gd -- role=guest 
 | `lag=4g` у обоих | ~135 мс | 4 тика | 0 |
 | `lag=bad` у обоих (+5 % потерь) | ~260 мс | 8 тиков | 0 |
 
-Если симуляцию поменяли намеренно, эталонный хеш в `src/features/volley_sim/determinism_probe.tres`
+Если симуляцию поменяли намеренно, эталонный хеш в `src/game/scenes/game/volley_sim/determinism_probe.tres`
 надо обновить: тест печатает новое значение.
 
 ## 8. Настройка без кода

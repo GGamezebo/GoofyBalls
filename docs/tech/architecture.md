@@ -14,8 +14,8 @@
 |---|---|
 | `main.tscn` → `src/game/main.gd` | Запуск HFSM приложения |
 | `src/game/hfsm/app_hfsm.json` | Фазы приложения: `App` → `Menu` / `Battle` / `PostBattle`; параллельно `Platform` (`WEB` / `Android` / `Desktop`) и `Online` → `Room` (комната с другом) |
-| `src/game/scenes/{app_root,online,room,menu,game,post_battle}` | Экраны и контексты — только оркестрация (`IScene`: `initialize` / `deinit` / `on_event`). `online` переводит запросы `OnlineEvents` в события HFSM; `room` (состояние `App/Online/Room`) держит соединение с Nakama, пока игрок в комнате |
-| `src/features/{name}/` | Изолированные фичи: `volley_sim` (+`phases/` — фазы матча на FSM, `buffs/`), `match_session` (сессии, настройки rollback, эмуляция сети), `court_view`, `buff_fx`, `online` (клиент Nakama, комнаты), `net_overlay`, `virtual_controls`, `ai_opponent` |
+| `src/game/scenes/{app_root,online,room,menu,game,post_battle}` | Экраны и контексты — только оркестрация (`IScene`: `initialize` / `deinit` / `on_event`). `online` переводит запросы `OnlineEvents` в события HFSM; `room` (состояние `App/Online/Room`) держит соединение с Nakama, пока игрок в комнате. `game` хранит и правила боя — детерминированную симуляцию `game/volley_sim/` (+`phases/` — фазы матча на FSM, `buffs/`), как `game_logic` в quizmatik |
+| `src/features/{name}/` | Изолированные фичи: `match_session` (сессии, настройки rollback, эмуляция сети), `court_view`, `buff_fx`, `online` (клиент Nakama, комнаты), `net_overlay`, `virtual_controls`, `ai_opponent` |
 | `src/entities/{name}/` | Игровые сущности, собранные из общих компонентов: `blob`, `ball`. Друг друга не импортируют |
 | `src/entities/components/{name}/` | Общие компоненты сущностей, зависящие от игры: `floor_shadow`. Используются только сущностями |
 | `src/common/` | Общие ресурсы: пресеты физики, арены, правила, персонажи, `MatchSetup` |
@@ -35,7 +35,7 @@
 - **UI собирается в редакторе**, повторяющиеся элементы — шаблоны `.tscn`. Окна меню идут через `WindowStackManager`, диалоги — поверх него.
 - **`class_name` и `@export` вместо жёстких путей `res://`.**
 - **Mobile + Steam + HTML5 с первого дня:** тач и клавиатура/геймпад. Платформенный код живёт только в платформенных контекстах HFSM (`App/Platform` → `WEB` / `Android` / `Desktop` → магазины). Родитель один раз проверяет `OS.has_feature` и поднимает только ветку текущей платформы, игра общается с ней через события-ресурсы.
-- **Слои:** `src/game` (HFSM, контексты, сцены-оркестраторы) → `src/features` (изолированные фичи) / `src/entities` (сущности) → `src/entities/components` (их общие компоненты) → `src/ui`, `src/common` (общие виджеты и ресурсы игры) → `core` (код без зависимостей от проекта). Зависимости идут только вниз.
+- **Слои:** `src/game` (HFSM, контексты, сцены-оркестраторы; контекст боя `game` держит у себя и симуляцию `volley_sim` — фичи её не импортируют, а получают `state`/`cfg` как данные) → `src/features` (изолированные фичи) / `src/entities` (сущности) → `src/entities/components` (их общие компоненты) → `src/ui`, `src/common` (общие виджеты и ресурсы игры) → `core` (код без зависимостей от проекта). Зависимости идут только вниз.
 - **Крупные контексты — отдельные состояния HFSM со своими сценами:** фазы приложения, платформы, онбординг, фичи, которые включает сервер. У каждого состояния есть ресурс данных по умолчанию (`.tres`, подменяется при активации состояния) и ресурс событий, через который оно общается с другими состояниями.
 - **Ни одного синглтона:** ни автолоадов, ни глобального статического состояния. Исключение — сторонние плагины.
 - **Переиспользование:** код, не зависящий от проекта (паттерны, утилиты, чистая математика, как `hfsm` или `soft_ring`), — в `core/lib/`. Общие для нескольких сущностей, но зависящие от игры части — в `src/entities/components/`. Нужное одной сущности остаётся внутри неё. Фичи — исключение: все зависимости держат внутри себя и не импортируют `src/entities/`.
@@ -98,7 +98,7 @@ MatchSession: Local | Rollback(P2P или relay) | Authoritative (только �
 ## 7. Отображение
 - Блоб: кольцо из 16–24 точек на пружинах, гладкий контур, блик, обводка.
 - Glow: `WorldEnvironment` + 2D HDR. **Проверить работу в Compatibility на Godot 4.7.** Если не работает, используем additive-ореолы спрайтами.
-- Визуал каждого бафа лежит в `src/features/buff_fx/<buff_id>/`, логика — в `src/features/volley_sim/buffs/<buff_id>.gd`.
+- Визуал каждого бафа лежит в `src/features/buff_fx/<buff_id>/`, логика — в `src/game/scenes/game/volley_sim/buffs/<buff_id>.gd`.
 
 ## 8. Сеть
 ### Сессии
