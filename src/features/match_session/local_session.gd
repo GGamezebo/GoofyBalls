@@ -34,4 +34,5 @@ func _physics_process(_delta: float) -> void:
 	for slot in _slot_count:
 		inputs.append(_sample.call(slot))
 	var tick: int = _step.call(inputs)
+	_confirmed_tick = tick # no rollback offline: every tick is final
 	ev_ticked.emit(tick)

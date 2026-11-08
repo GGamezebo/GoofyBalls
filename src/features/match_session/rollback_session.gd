@@ -39,6 +39,8 @@ var _last_health_ms: int = 0
 var _sync_lost: bool = false
 var _lost_since_ms: int = 0
 var _notice_shown: bool = false
+## Last tick with every peer's real input (SyncManager `tick_input_complete`).
+var _input_complete_tick: int = 0
 
 
 ## `slot_peers[i]` = peer id that owns slot i. Call after `bind_sim()`.
@@ -112,6 +114,8 @@ func bind_inputs(slot_peers: Array[int], my_id: int) -> void:
 	add_to_group("network_sync")
 	if not SyncManager.state_loaded.is_connected(_on_state_loaded):
 		SyncManager.state_loaded.connect(_on_state_loaded)
+	if not SyncManager.tick_input_complete.is_connected(_on_tick_input_complete):
+		SyncManager.tick_input_complete.connect(_on_tick_input_complete)
 
 
 func shutdown() -> void:
@@ -123,6 +127,7 @@ func shutdown() -> void:
 		[SyncManager.sync_started, _on_sync_started], [SyncManager.sync_stopped, _on_sync_stopped],
 		[SyncManager.sync_lost, _on_sync_lost], [SyncManager.sync_regained, _on_sync_regained],
 		[SyncManager.sync_error, _on_sync_error], [SyncManager.state_loaded, _on_state_loaded],
+		[SyncManager.tick_input_complete, _on_tick_input_complete],
 		[SyncManager.skip_ticks_flagged, _on_skip_ticks],
 		[SyncManager.remote_state_mismatch, _on_state_mismatch],
 		[SyncManager.prediction_missed, _on_prediction_missed],
@@ -152,10 +157,6 @@ func leave() -> void:
 
 func is_online() -> bool:
 	return true
-
-
-func is_tick_confirmed() -> bool:
-	return not SyncManager.is_in_rollback() and SyncManager.is_current_tick_input_complete()
 
 
 func get_stats() -> Dictionary:
@@ -229,6 +230,11 @@ func _network_postprocess(_input: Dictionary) -> void:
 	for node in _inputs:
 		inputs.append(node.latest if not node.latest.is_empty() else _neutral)
 	var tick: int = _step.call(inputs)
+	# Input that completed a tick may still owe a rollback, which SyncManager runs at the start of
+	# its next physics frame. A normal (not re-simulated) step comes after that rollback, so only
+	# here are the ticks up to `_input_complete_tick` known to hold their final state.
+	if not SyncManager.is_in_rollback():
+		_confirmed_tick = mini(_input_complete_tick, tick)
 	ev_ticked.emit(tick)
 
 
@@ -350,6 +356,10 @@ func _on_sync_error(msg: String) -> void:
 func _on_state_loaded(rollback_ticks: int) -> void:
 	stats.on_rollback(rollback_ticks)
 	ev_rolled_back.emit(rollback_ticks)
+
+
+func _on_tick_input_complete(tick: int) -> void:
+	_input_complete_tick = tick
 
 
 func _on_skip_ticks(count: int) -> void:

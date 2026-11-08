@@ -33,9 +33,8 @@ var _listener := EventListener.new()
 var _log: LogChannel
 var _online: bool = false
 var _finished: bool = false
-var _seen_point_serial: int = 0
-var _last_scores: Array = []
-var _over_announced: bool = false
+## Holds points / match end back until their tick can no longer be rolled back.
+var _gate: MatchEventGate
 
 
 func initialize(data: Dictionary) -> void:
@@ -45,6 +44,7 @@ func initialize(data: Dictionary) -> void:
 	if payload_setup == null:
 		_setup.match_seed = randi()
 	_sim.reset(_setup.to_sim_config())
+	_gate = MatchEventGate.new(_sim)
 
 	var my_id := multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 0
 	_online = _setup.has_remote_peers(my_id)
@@ -58,8 +58,10 @@ func initialize(data: Dictionary) -> void:
 	session_parent.add_child(_session)
 	_session.bind_sim(_inputs.slot_count(), _inputs.sample, _step, _sim.save_state, _sim.load_state, VolleySim.neutral_input())
 	_listener.add(_session.ev_started, _on_session_started)
-	_listener.add(_session.ev_ticked, match_view.capture)
-	_listener.add(_session.ev_rolled_back, func(_ticks: int) -> void: match_view.on_rolled_back())
+	_listener.add(_session.ev_ticked, _on_ticked)
+	_listener.add(_session.ev_rolled_back, _on_rolled_back)
+	_listener.add(_gate.ev_point, _on_point_confirmed)
+	_listener.add(_gate.ev_match_over, _on_match_over_confirmed)
 	_listener.add(_session.ev_status, func(text: String) -> void: game_events.ev_status.emit(text))
 	_listener.add(_session.ev_stopped, _on_session_stopped)
 	_listener.add(_session.ev_aborted, _on_session_aborted)
@@ -79,8 +81,6 @@ func initialize(data: Dictionary) -> void:
 
 	var local_slots := _inputs.local_slots()
 	match_view.setup(_sim, _setup, local_slots)
-	_last_scores = (_sim.state["scores"] as Array).duplicate()
-	_seen_point_serial = int(_sim.state["point_serial"])
 	game_events.ev_match_started.emit(_match_info(local_slots))
 
 	_log.info("match_start", {
@@ -117,31 +117,33 @@ func _step(inputs: Array) -> int:
 func _process(_delta: float) -> void:
 	if _session == null or _finished:
 		return
-	_emit_score_changes()
-	if _sim.is_match_over():
-		if not _over_announced:
-			_over_announced = true
-			game_events.ev_match_over.emit(int(_sim.state["winner_team"]))
-		if int(_sim.state["phase_ticks"]) >= end_linger_ticks and _session.is_tick_confirmed():
-			_finish(false, "")
+	_gate.release(_session.confirmed_tick())
+	if _gate.is_over_confirmed() and int(_sim.state["phase_ticks"]) >= end_linger_ticks:
+		_finish(false, "")
 
 
-func _emit_score_changes() -> void:
-	var scores: Array = _sim.state["scores"]
-	if scores != _last_scores:
-		_last_scores = scores.duplicate()
-		game_events.ev_score_changed.emit(_last_scores)
-	var serial := int(_sim.state["point_serial"])
-	if serial > _seen_point_serial:
-		var team := int(_sim.state["point_team"])
-		game_events.ev_point.emit(team, int(_sim.state["point_reason"]))
-		_log.info("point", {"team": team, "score": ":".join(scores.map(func(v): return str(v))),
-			"reason": int(_sim.state["point_reason"]), "tick": int(_sim.state["tick"])})
-	elif serial < _seen_point_serial:
-		_log.debug("point_rolled_back", {"serial": serial})
-	_seen_point_serial = serial
-	if _over_announced and not _sim.is_match_over():
-		_over_announced = false
+func _on_ticked(tick: int) -> void:
+	match_view.capture(tick)
+	_gate.on_ticked(tick)
+
+
+func _on_rolled_back(_ticks: int) -> void:
+	match_view.on_rolled_back()
+	var undone := _gate.on_rolled_back()
+	if undone > 0:
+		_log.debug("point_rolled_back", {"count": undone, "tick": int(_sim.state["tick"])})
+
+
+func _on_point_confirmed(team: int, reason: int, scores: Array, tick: int) -> void:
+	game_events.ev_score_changed.emit(scores)
+	game_events.ev_point.emit(team, reason)
+	_log.info("point", {"team": team, "score": ":".join(scores.map(func(v): return str(v))),
+		"reason": reason, "tick": tick})
+
+
+func _on_match_over_confirmed(winner_team: int, tick: int) -> void:
+	_log.info("match_over", {"winner": winner_team, "tick": tick})
+	game_events.ev_match_over.emit(winner_team)
 
 
 func _on_session_started() -> void:

@@ -53,6 +53,10 @@ func test_late_remote_input_rolls_back_to_identical_state() -> void:
 	var left_path := str(session.get_node("Input0").get_path())
 	var right_path := str(session.get_node("Input1").get_path())
 	var misses := 0
+	# confirmed_tick(): never goes back, and the state stored for it is already the final one.
+	var last_confirmed := 0
+	var confirmed_wrong := 0
+	var confirmed_checked := 0
 	var calls: int = TOTAL_TICKS + SyncManager.input_delay
 	for call_index in range(1, calls + 1):
 		SyncManager.mechanized_input_received[1] = {call_index: {left_path: _scripted(call_index, 0)}}
@@ -70,9 +74,22 @@ func test_late_remote_input_rolls_back_to_identical_state() -> void:
 			SyncManager.mechanized_input_received[2] = {arriving: actual}
 		SyncManager.execute_mechanized_tick()
 		SyncManager.execute_mechanized_interpolation_frame(1.0 / 60.0)
+		var confirmed := session.confirmed_tick()
+		if confirmed < last_confirmed or confirmed > maxi(SyncManager.current_tick, 0):
+			confirmed_wrong += 1
+		last_confirmed = confirmed
+		for frame in SyncManager.state_buffer:
+			if frame.tick == confirmed and confirmed >= 1 and confirmed <= TOTAL_TICKS:
+				confirmed_checked += 1
+				if frame.data[str(session.get_path())] != ref_states[confirmed]:
+					confirmed_wrong += 1
 
 	expect(misses > 0, "late remote input caused prediction misses (%d)" % misses)
 	expect(rolled_back[0] > 0, "session reported rollbacks (%d)" % rolled_back[0])
+	expect(confirmed_checked > TOTAL_TICKS / 2, "confirmed tick advanced (%d checks)" % confirmed_checked)
+	expect_eq(confirmed_wrong, 0, "confirmed ticks never move back and already hold the final state")
+	expect(SyncManager.current_tick - last_confirmed >= REMOTE_DELAY - SyncManager.input_delay,
+		"confirmed tick lags the predicted one (%d vs %d)" % [last_confirmed, SyncManager.current_tick])
 
 	var checked := 0
 	for frame in SyncManager.state_buffer:

@@ -33,6 +33,8 @@ var _save: Callable
 var _load: Callable
 var _slot_count: int = 0
 var _neutral: Dictionary = {}
+## Last sim tick whose state can no longer change (see `confirmed_tick()`).
+var _confirmed_tick: int = 0
 
 
 func bind_sim(slot_count: int, sample: Callable, step: Callable, save_fn: Callable, load_fn: Callable, neutral: Dictionary) -> void:
@@ -62,9 +64,10 @@ func set_paused(_paused: bool) -> void:
 	pass
 
 
-## True when the current tick can no longer be rolled back (safe to show the final result).
-func is_tick_confirmed() -> bool:
-	return true
+## Last sim tick that can no longer be rolled back: every tick up to it ran with real inputs.
+## Online it lags the current tick by about the ping; an event at tick T is final once T <= this.
+func confirmed_tick() -> int:
+	return _confirmed_tick
 
 
 func is_online() -> bool:
