@@ -15,13 +15,13 @@
 | `main.tscn` → `src/game/main.gd` | Запуск HFSM приложения |
 | `src/game/hfsm/app_hfsm.json` | Фазы приложения: `App` → `Menu` / `Battle` / `PostBattle`; параллельно `Platform` (`WEB` / `Android` / `Desktop`) и `Online` |
 | `src/game/scenes/{app_root,online,menu,game,post_battle}` | Экраны и контексты — только оркестрация (`IScene`: `initialize` / `deinit` / `on_event`). `online` держит соединение с Nakama, пока игрок в комнате |
-| `src/features/{name}/` | Изолированные фичи: `volley_sim` (+`buffs/`), `match_session` (сессии, настройки rollback, эмуляция сети), `court_view`, `buff_fx`, `online` (клиент Nakama, комнаты), `net_overlay`, `virtual_controls`, `ai_opponent` |
+| `src/features/{name}/` | Изолированные фичи: `volley_sim` (+`phases/` — фазы матча на FSM, `buffs/`), `match_session` (сессии, настройки rollback, эмуляция сети), `court_view`, `buff_fx`, `online` (клиент Nakama, комнаты), `net_overlay`, `virtual_controls`, `ai_opponent` |
 | `src/entities/{name}/` | Игровые сущности, собранные из общих компонентов: `blob`, `ball`. Друг друга не импортируют |
 | `src/entities/components/{name}/` | Общие компоненты сущностей, зависящие от игры: `floor_shadow`. Используются только сущностями |
 | `src/common/` | Общие ресурсы: пресеты физики, арены, правила, персонажи, `MatchSetup` |
 | `src/ui/` | Общий UI игры (нужен ≥2 экранам): `theme/` (`goofy_theme.tres` с вариантами `PrimaryButton`, `CardPanel` и др.), `components/` (кнопки, чипы, счётчики), `dialogs/` (модалки и шиты), `overlays/` (`loading_screen`), `backgrounds/` (`neon_background`). UI одного экрана лежит рядом с ним. Правило — `.claude/rules/ui.md` |
 | `src/game/account/` | Прогресс, статистика, сохранения |
-| `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `log`, `soft_ring` (из quizmatik; `fsm`, `shackers` — когда понадобятся) |
+| `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `log`, `soft_ring`, `fsm` (из quizmatik; `fsm` переведён на `RefCounted` и умеет `restore_state`; `shackers` — когда понадобится) |
 | `core/systems/` | Готовые подсистемы со своим состоянием и `.tres` по умолчанию: настройки, сохранения, звук, переназначение управления (как `user_settings` в quizmatik). Без автолоадов |
 | `core/theme/` | Базовая тема UI: `Theme`, шрифты, `StyleBox`. Стиль, специфичный для игры, — в `src/ui/theme/` |
 | `core/shaders/`, `core/editor/`, `core/net/` | Заводятся при первой необходимости: универсальные шейдеры; `@tool`-помощники редактора (плагины — в `addons/`); сетевые утилиты без знания игры и Nakama. Правило — `.claude/rules/core.md` |
@@ -44,7 +44,7 @@
 - **Логи:** на все крупные события (переходы HFSM, старт и конец матча, очки, бафы, сеть, сохранения, ошибки) пишем однострочные логи с уровнем `DEBUG` / `INFO` / `WARN` / `ERROR`. Уровень настраивается по каналам, лишнее отключается. Главная цель — чтобы AI-агенты находили баги по логу. Логгер — в `core/lib/log/`, без синглтона.
 - **Сохранения:** `SaveManager` через `RootEvents.ev_save_progress`, с задержкой и не во время боя.
 
-**Отличие от quizmatik:** правила матча (подача, розыгрыш, очко, конец) живут **внутри детерминированной симуляции**, а не в отдельной FSM `GameManager`. Иначе rollback не сможет их откатывать. Сцена `game` только собирает симуляцию, сессию, отображение и HUD.
+**Отличие от quizmatik:** правила матча (подача, розыгрыш, очко, конец) живут **внутри детерминированной симуляции**, а не в отдельной FSM `GameManager`. Иначе rollback не сможет их откатывать. Фазы — та же FSM из `core/lib/fsm`, но внутри симуляции: по состоянию `SimPhase` на фазу (`volley_sim/phases/`). Сами фазы ничего не хранят, правда — `state["phase"]`; на каждом тике симуляция подстраивает FSM под него (`restore_state`), поэтому откат и загрузка работают. Сцена `game` только собирает симуляцию, сессию, отображение и HUD.
 
 ## 2.1 Главный принцип
 **Клиент отправляет только ввод. Игру считает одна чистая детерминированная симуляция.**
