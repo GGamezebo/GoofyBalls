@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dpumtuyf8ke7q"]
 
-[ext_resource type="Script" path="res://src/entities/blob/blob_view.gd" id="1_blob"]
-[ext_resource type="Script" path="res://src/entities/components/floor_shadow/floor_shadow.gd" id="2_shadow"]
+[ext_resource type="Script" uid="uid://simua85o04v4" path="res://src/entities/blob/blob_view.gd" id="1_blob"]
+[ext_resource type="Script" uid="uid://btthp4hw3y0xo" path="res://src/entities/components/floor_shadow/floor_shadow.gd" id="2_shadow"]
 [ext_resource type="Resource" path="res://src/entities/blob/blob_soft_ring.tres" id="3_ring"]
 
 [sub_resource type="Gradient" id="Gradient_shadow"]
@@ -16,6 +16,17 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
+[sub_resource type="Gradient" id="Gradient_light"]
+colors = PackedColorArray(1, 1, 1, 0.51, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_light"]
+gradient = SubResource("Gradient_light")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.4, 0.35)
+fill_to = Vector2(0.72, 0.35)
+
 [sub_resource type="Gradient" id="Gradient_circle"]
 offsets = PackedFloat32Array(0, 0.97, 1)
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
@@ -28,19 +39,7 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
-[sub_resource type="Gradient" id="Gradient_light"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(1, 1, 1, 0.51, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_light"]
-gradient = SubResource("Gradient_light")
-width = 256
-height = 256
-fill = 1
-fill_from = Vector2(0.4, 0.35)
-fill_to = Vector2(0.72, 0.35)
-
-[node name="BlobView" type="Node2D" node_paths=PackedStringArray("art", "goo", "halo_outer", "halo_inner", "skin", "light", "outline", "shine", "sparkle", "eyes", "pupils", "shadow", "tinted", "tinted_light", "name_label")]
+[node name="BlobView" type="Node2D" unique_id=370568195 node_paths=PackedStringArray("art", "goo", "halo_outer", "halo_inner", "skin", "light", "outline", "shine", "sparkle", "eyes", "pupils", "shadow", "tinted", "tinted_light", "name_label")]
 script = ExtResource("1_blob")
 ring_config = ExtResource("3_ring")
 art = NodePath("Art")
@@ -59,107 +58,104 @@ tinted = [NodePath("Art/Goo/StrandA"), NodePath("Art/Goo/StrandB"), NodePath("Ar
 tinted_light = [NodePath("Art/Outline")]
 name_label = NodePath("NameLabel")
 
-[node name="Shadow" type="Sprite2D" parent="."]
+[node name="Shadow" type="Sprite2D" parent="." unique_id=1839178407]
 position = Vector2(0, 128)
 scale = Vector2(0.95, 0.171)
 texture = SubResource("GradientTexture2D_shadow")
 script = ExtResource("2_shadow")
-fade_radii = 6.0
-min_fade = 0.15
-min_size = 0.63
 
-[node name="Art" type="Node2D" parent="."]
+[node name="Art" type="Node2D" parent="." unique_id=1219489580]
 
-[node name="Goo" type="Node2D" parent="Art"]
+[node name="Goo" type="Node2D" parent="Art" unique_id=1231600086]
 visible = false
 
-[node name="StrandA" type="Line2D" parent="Art/Goo"]
+[node name="StrandA" type="Line2D" parent="Art/Goo" unique_id=769926569]
 self_modulate = Color(0.0118, 0.7216, 1, 1)
-points = PackedVector2Array(102.88, -57.60, 131.04, -65.28)
+points = PackedVector2Array(102.88, -57.6, 131.04, -65.28)
 width = 12.8
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="StrandB" type="Line2D" parent="Art/Goo"]
+[node name="StrandB" type="Line2D" parent="Art/Goo" unique_id=34967506]
 self_modulate = Color(0.0118, 0.7216, 1, 1)
-points = PackedVector2Array(115.20, 0.00, 143.36, 0.00)
+points = PackedVector2Array(115.2, 0, 143.36, 0)
 width = 12.8
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="StrandC" type="Line2D" parent="Art/Goo"]
+[node name="StrandC" type="Line2D" parent="Art/Goo" unique_id=364483016]
 self_modulate = Color(0.0118, 0.7216, 1, 1)
-points = PackedVector2Array(102.88, 57.60, 131.04, 65.28)
+points = PackedVector2Array(102.88, 57.6, 131.04, 65.28)
 width = 12.8
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="HaloOuter" type="Polygon2D" parent="Art"]
+[node name="HaloOuter" type="Polygon2D" parent="Art" unique_id=461327949]
 self_modulate = Color(0.0118, 0.7216, 1, 1)
-polygon = PackedVector2Array(153.60, 0.00, 146.08, 47.47, 124.27, 90.28, 90.28, 124.27, 47.47, 146.08, 0.00, 153.60, -47.47, 146.08, -90.28, 124.27, -124.27, 90.28, -146.08, 47.47, -153.60, 0.00, -146.08, -47.47, -124.27, -90.28, -90.28, -124.27, -47.47, -146.08, -0.00, -153.60, 47.47, -146.08, 90.28, -124.27, 124.27, -90.28, 146.08, -47.47)
 color = Color(1, 1, 1, 0.084)
+polygon = PackedVector2Array(153.6, 0, 146.08, 47.47, 124.27, 90.28, 90.28, 124.27, 47.47, 146.08, 0, 153.6, -47.47, 146.08, -90.28, 124.27, -124.27, 90.28, -146.08, 47.47, -153.6, 0, -146.08, -47.47, -124.27, -90.28, -90.28, -124.27, -47.47, -146.08, 0, -153.6, 47.47, -146.08, 90.28, -124.27, 124.27, -90.28, 146.08, -47.47)
 
-[node name="HaloInner" type="Polygon2D" parent="Art"]
+[node name="HaloInner" type="Polygon2D" parent="Art" unique_id=221792783]
 self_modulate = Color(0.0118, 0.7216, 1, 1)
-polygon = PackedVector2Array(139.52, 0.00, 132.69, 43.11, 112.87, 82.01, 82.01, 112.87, 43.11, 132.69, 0.00, 139.52, -43.11, 132.69, -82.01, 112.87, -112.87, 82.01, -132.69, 43.11, -139.52, 0.00, -132.69, -43.11, -112.87, -82.01, -82.01, -112.87, -43.11, -132.69, -0.00, -139.52, 43.11, -132.69, 82.01, -112.87, 112.87, -82.01, 132.69, -43.11)
 color = Color(1, 1, 1, 0.14)
+polygon = PackedVector2Array(139.52, 0, 132.69, 43.11, 112.87, 82.01, 82.01, 112.87, 43.11, 132.69, 0, 139.52, -43.11, 132.69, -82.01, 112.87, -112.87, 82.01, -132.69, 43.11, -139.52, 0, -132.69, -43.11, -112.87, -82.01, -82.01, -112.87, -43.11, -132.69, 0, -139.52, 43.11, -132.69, 82.01, -112.87, 112.87, -82.01, 132.69, -43.11)
 
-[node name="Skin" type="Polygon2D" parent="Art"]
+[node name="Skin" type="Polygon2D" parent="Art" unique_id=1299869129]
 self_modulate = Color(0.0118, 0.7216, 1, 1)
-polygon = PackedVector2Array(128.00, 0.00, 121.74, 39.55, 103.55, 75.24, 75.24, 103.55, 39.55, 121.74, 0.00, 128.00, -39.55, 121.74, -75.24, 103.55, -103.55, 75.24, -121.74, 39.55, -128.00, 0.00, -121.74, -39.55, -103.55, -75.24, -75.24, -103.55, -39.55, -121.74, -0.00, -128.00, 39.55, -121.74, 75.24, -103.55, 103.55, -75.24, 121.74, -39.55)
+polygon = PackedVector2Array(128, 0, 121.74, 39.55, 103.55, 75.24, 75.24, 103.55, 39.55, 121.74, 0, 128, -39.55, 121.74, -75.24, 103.55, -103.55, 75.24, -121.74, 39.55, -128, 0, -121.74, -39.55, -103.55, -75.24, -75.24, -103.55, -39.55, -121.74, 0, -128, 39.55, -121.74, 75.24, -103.55, 103.55, -75.24, 121.74, -39.55)
 
-[node name="Light" type="Polygon2D" parent="Art"]
-polygon = PackedVector2Array(128.00, 0.00, 121.74, 39.55, 103.55, 75.24, 75.24, 103.55, 39.55, 121.74, 0.00, 128.00, -39.55, 121.74, -75.24, 103.55, -103.55, 75.24, -121.74, 39.55, -128.00, 0.00, -121.74, -39.55, -103.55, -75.24, -75.24, -103.55, -39.55, -121.74, -0.00, -128.00, 39.55, -121.74, 75.24, -103.55, 103.55, -75.24, 121.74, -39.55)
-uv = PackedVector2Array(256.00, 128.00, 249.74, 167.55, 231.55, 203.24, 203.24, 231.55, 167.55, 249.74, 128.00, 256.00, 88.45, 249.74, 52.76, 231.55, 24.45, 203.24, 6.26, 167.55, 0.00, 128.00, 6.26, 88.45, 24.45, 52.76, 52.76, 24.45, 88.45, 6.26, 128.00, 0.00, 167.55, 6.26, 203.24, 24.45, 231.55, 52.76, 249.74, 88.45)
+[node name="Light" type="Polygon2D" parent="Art" unique_id=1834726683]
 texture = SubResource("GradientTexture2D_light")
+polygon = PackedVector2Array(128, 0, 121.74, 39.55, 103.55, 75.24, 75.24, 103.55, 39.55, 121.74, 0, 128, -39.55, 121.74, -75.24, 103.55, -103.55, 75.24, -121.74, 39.55, -128, 0, -121.74, -39.55, -103.55, -75.24, -75.24, -103.55, -39.55, -121.74, 0, -128, 39.55, -121.74, 75.24, -103.55, 103.55, -75.24, 121.74, -39.55)
+uv = PackedVector2Array(256, 128, 249.74, 167.55, 231.55, 203.24, 203.24, 231.55, 167.55, 249.74, 128, 256, 88.45, 249.74, 52.76, 231.55, 24.45, 203.24, 6.26, 167.55, 0, 128, 6.26, 88.45, 24.45, 52.76, 52.76, 24.45, 88.45, 6.26, 128, 0, 167.55, 6.26, 203.24, 24.45, 231.55, 52.76, 249.74, 88.45)
 
-[node name="Outline" type="Line2D" parent="Art"]
+[node name="Outline" type="Line2D" parent="Art" unique_id=1339293545]
 self_modulate = Color(0.3577, 0.819, 1, 1)
-points = PackedVector2Array(123.52, 0.00, 117.47, 38.17, 99.93, 72.60, 72.60, 99.93, 38.17, 117.47, 0.00, 123.52, -38.17, 117.47, -72.60, 99.93, -99.93, 72.60, -117.47, 38.17, -123.52, 0.00, -117.47, -38.17, -99.93, -72.60, -72.60, -99.93, -38.17, -117.47, -0.00, -123.52, 38.17, -117.47, 72.60, -99.93, 99.93, -72.60, 117.47, -38.17, 123.52, 0.00)
+points = PackedVector2Array(123.52, 0, 117.47, 38.17, 99.93, 72.6, 72.6, 99.93, 38.17, 117.47, 0, 123.52, -38.17, 117.47, -72.6, 99.93, -99.93, 72.6, -117.47, 38.17, -123.52, 0, -117.47, -38.17, -99.93, -72.6, -72.6, -99.93, -38.17, -117.47, 0, -123.52, 38.17, -117.47, 72.6, -99.93, 99.93, -72.6, 117.47, -38.17, 123.52, 0)
 width = 8.96
 antialiased = true
 
-[node name="Shine" type="Sprite2D" parent="Art"]
-position = Vector2(-51.2, -64)
+[node name="Shine" type="Sprite2D" parent="Art" unique_id=338484954]
 self_modulate = Color(1, 1, 1, 0.75)
+position = Vector2(-51.2, -64)
 rotation = -0.61
 scale = Vector2(0.22, 0.12)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="Sparkle" type="Sprite2D" parent="Art"]
-position = Vector2(-15.36, -92.16)
+[node name="Sparkle" type="Sprite2D" parent="Art" unique_id=126645811]
 self_modulate = Color(1, 1, 1, 0.8)
+position = Vector2(-15.36, -92.16)
 scale = Vector2(0.05, 0.05)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="EyeLeft" type="Node2D" parent="Art"]
+[node name="EyeLeft" type="Node2D" parent="Art" unique_id=1905583148]
 position = Vector2(-38.4, -15.36)
 
-[node name="White" type="Sprite2D" parent="Art/EyeLeft"]
+[node name="White" type="Sprite2D" parent="Art/EyeLeft" unique_id=909216879]
 scale = Vector2(0.17, 0.22)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="Pupil" type="Sprite2D" parent="Art/EyeLeft"]
+[node name="Pupil" type="Sprite2D" parent="Art/EyeLeft" unique_id=3244676]
 self_modulate = Color(0.0392, 0.0588, 0.1451, 1)
 scale = Vector2(0.09, 0.09)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="EyeRight" type="Node2D" parent="Art"]
+[node name="EyeRight" type="Node2D" parent="Art" unique_id=1216112845]
 position = Vector2(38.4, -15.36)
 
-[node name="White" type="Sprite2D" parent="Art/EyeRight"]
+[node name="White" type="Sprite2D" parent="Art/EyeRight" unique_id=473606410]
 scale = Vector2(0.17, 0.22)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="Pupil" type="Sprite2D" parent="Art/EyeRight"]
+[node name="Pupil" type="Sprite2D" parent="Art/EyeRight" unique_id=793998308]
 self_modulate = Color(0.0392, 0.0588, 0.1451, 1)
 scale = Vector2(0.09, 0.09)
 texture = SubResource("GradientTexture2D_circle")
 
-[node name="NameLabel" type="Label" parent="."]
+[node name="NameLabel" type="Label" parent="." unique_id=1782491833]
 offset_left = -120.0
 offset_top = -192.0
 offset_right = 120.0
