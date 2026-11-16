@@ -17,19 +17,22 @@ extends IScene
 @export var rematch_button: Button
 @export var next_button: Button
 @export var hero_blob: BlobView
+## Idle hop of the hero blob.
+@export var hero_idle: BlobIdleConfig
 @export var hero_radius_px: float = 130.0
 
 var _listener := EventListener.new()
 var _log: LogChannel
 var _result: Dictionary = {}
 var _online: bool = false
-var _hero_time: float = 0.0
+var _hop: BlobIdle
 var _hero_base := Vector2.ZERO
 
 
 func initialize(data: Dictionary) -> void:
 	_log = LogChannel.new("results", log_settings)
 	_result = data if data.has("scores") else _preview_result()
+	_hop = BlobIdle.new(hero_idle)
 	_online = bool(_result.get("online", false))
 	_listener.add(rematch_button.pressed, _on_rematch)
 	_listener.add(next_button.pressed, _on_next)
@@ -45,11 +48,10 @@ func deinit() -> void:
 
 
 func _process(delta: float) -> void:
-	if hero_blob == null:
+	if hero_blob == null or _hop == null:
 		return
-	_hero_time += delta
-	var hop := maxf(0.0, sin(_hero_time * 5.0)) * 30.0
-	hero_blob.apply(_hero_base - Vector2(0.0, hop), -cos(_hero_time * 5.0) * 6.0, hop <= 0.5,
+	_hop.advance(delta)
+	hero_blob.apply(_hero_base - Vector2(0.0, _hop.height), _hop.speed, _hop.grounded,
 		_hero_base.y + hero_radius_px, _hero_base + Vector2(0.0, -400.0), delta)
 
 

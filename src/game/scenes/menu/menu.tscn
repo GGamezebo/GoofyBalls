@@ -13,11 +13,13 @@
 [ext_resource type="PackedScene" path="res://src/ui/backgrounds/neon_background/neon_background.tscn" id="11_bg"]
 [ext_resource type="PackedScene" path="res://src/entities/blob/blob_view.tscn" id="12_blob"]
 [ext_resource type="Script" path="res://src/game/scenes/menu/friend_window.gd" id="13_fw"]
+[ext_resource type="Script" path="res://src/game/scenes/menu/friend_room_panel.gd" id="17_frp"]
+[ext_resource type="Resource" path="res://src/game/scenes/menu/hero_idle.tres" id="18_idle"]
 [ext_resource type="Script" path="res://core/lib/window_stack_manager/window_stack_manager.gd" id="14_wsm"]
 [ext_resource type="Script" path="res://core/lib/window_stack_manager/button_window_stack_transition.gd" id="15_fwd"]
 [ext_resource type="Script" path="res://core/lib/window_stack_manager/button_window_back.gd" id="16_back"]
 
-[node name="Menu" type="Control" node_paths=PackedStringArray("vs_ai_button", "local_2p_button", "friend_window", "hero_blob")]
+[node name="Menu" type="Control" node_paths=PackedStringArray("vs_ai_button", "local_2p_button", "friend_room", "hero_blob")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,17 +29,16 @@ grow_vertical = 2
 theme = ExtResource("10_th")
 script = ExtResource("1_menu")
 root_events = ExtResource("2_root_ev")
-online_events = ExtResource("3_online_ev")
 platform_caps = ExtResource("4_caps")
-online_config = ExtResource("5_cfg")
 vs_ai_setup = ExtResource("6_ai")
 local_2p_setup = ExtResource("7_2p")
 log_settings = ExtResource("8_log")
 vs_ai_button = NodePath("Windows/MainWindow/LaunchBlock/VsAi")
 local_2p_button = NodePath("Windows/MainWindow/LaunchBlock/Local2P")
-friend_window = NodePath("Windows/FriendWindow")
+friend_room = NodePath("FriendRoom")
 hero_blob = NodePath("Windows/MainWindow/HeroAnchor/Hero")
 palette = ExtResource("9_pal")
+hero_idle = ExtResource("18_idle")
 
 [node name="Background" parent="." instance=ExtResource("11_bg")]
 layout_mode = 1
@@ -344,6 +345,12 @@ layout_mode = 2
 theme_type_variation = &"GhostButton"
 theme_override_font_sizes/font_size = 26
 text = "Сохранить"
+
+[node name="FriendRoom" type="Node" parent="." node_paths=PackedStringArray("window")]
+script = ExtResource("17_frp")
+online_events = ExtResource("3_online_ev")
+online_config = ExtResource("5_cfg")
+window = NodePath("../Windows/FriendWindow")
 
 [node name="StackManager" type="Node" parent="." node_paths=PackedStringArray("default_window")]
 script = ExtResource("14_wsm")
