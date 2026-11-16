@@ -25,7 +25,38 @@ signal ev_status(text: String)
 signal ev_stopped
 ## The match cannot continue (opponent left, sync lost, desync).
 @warning_ignore("unused_signal")
-signal ev_aborted(reason: String)
+signal ev_aborted(reason: AbortReason)
+
+## Why a match ended without a result. NONE = it did not abort.
+enum AbortReason {
+	NONE,
+	NO_CONNECTION,
+	OPPONENT_MISSING,
+	HANDSHAKE_TIMEOUT,
+	OPPONENT_LEFT,
+	SYNC_ERROR,
+	## The tick loop stopped before the match was over (the owner reports it, not the session).
+	STOPPED,
+}
+
+## Greppable name for logs, e.g. `opponent_left`.
+static func abort_reason_name(reason: AbortReason) -> String:
+	return String(AbortReason.keys()[reason]).to_lower()
+
+
+## Player-facing text for the HUD status and the results screen.
+static func abort_reason_text(reason: AbortReason) -> String:
+	match reason:
+		AbortReason.OPPONENT_LEFT:
+			return "Соперник отключился"
+		AbortReason.SYNC_ERROR:
+			return "Связь потеряна"
+		AbortReason.HANDSHAKE_TIMEOUT, AbortReason.OPPONENT_MISSING:
+			return "Соперник не подключился"
+		AbortReason.STOPPED:
+			return "Матч остановлен"
+	return "Матч прерван"
+
 
 var _sample: Callable
 var _step: Callable

@@ -49,7 +49,7 @@ var _input_complete_tick: int = 0
 func setup(slot_peers: Array[int], log_channel: LogChannel) -> bool:
 	_log = log_channel if log_channel != null else LogChannel.new("net")
 	if not multiplayer.has_multiplayer_peer():
-		_abort("no_connection")
+		_abort(AbortReason.NO_CONNECTION)
 		return false
 	var my_id := multiplayer.get_unique_id()
 	for peer_id in slot_peers:
@@ -58,7 +58,7 @@ func setup(slot_peers: Array[int], log_channel: LogChannel) -> bool:
 	var connected := multiplayer.get_peers()
 	for peer_id in _remote_peers:
 		if not connected.has(peer_id):
-			_abort("opponent_missing")
+			_abort(AbortReason.OPPONENT_MISSING)
 			return false
 
 	bind_inputs(slot_peers, my_id)
@@ -196,7 +196,7 @@ func _process(delta: float) -> void:
 	if not _started:
 		_handshake_left -= delta
 		if _handshake_left <= 0.0:
-			_abort("handshake_timeout")
+			_abort(AbortReason.HANDSHAKE_TIMEOUT)
 			return
 		_resend_left -= delta
 		if _resend_left <= 0.0:
@@ -298,7 +298,7 @@ func _rpc_left() -> void:
 	if not _active or not _remote_peers.has(sender):
 		return
 	_log.warn("opponent_left_match", {"peer": sender, "tick": SyncManager.current_tick})
-	_abort("opponent_left")
+	_abort(AbortReason.OPPONENT_LEFT)
 
 
 ## "p2p" when traffic to the opponent goes over the direct link, "relay" otherwise.
@@ -364,7 +364,7 @@ func _set_lost_recovery(enabled: bool) -> void:
 
 func _on_sync_error(msg: String) -> void:
 	_log.error("sync_error", {"msg": msg, "tick": SyncManager.current_tick})
-	_abort("sync_error")
+	_abort(AbortReason.SYNC_ERROR)
 
 
 func _on_state_loaded(rollback_ticks: int) -> void:
@@ -393,13 +393,13 @@ func _on_state_mismatch(tick: int, peer_id: int, local_hash: int, remote_hash: i
 func _on_peer_disconnected(peer_id: int) -> void:
 	if _remote_peers.has(peer_id):
 		_log.warn("peer_disconnected", {"peer": peer_id, "tick": SyncManager.current_tick})
-		_abort("opponent_left")
+		_abort(AbortReason.OPPONENT_LEFT)
 
 
-func _abort(reason: String) -> void:
+func _abort(reason: AbortReason) -> void:
 	if _finished:
 		return
 	_finished = true
 	if _log != null:
-		_log.warn("session_abort", {"reason": reason})
+		_log.warn("session_abort", {"reason": abort_reason_name(reason)})
 	ev_aborted.emit(reason)

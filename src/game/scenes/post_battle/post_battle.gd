@@ -67,7 +67,7 @@ func _show_result() -> void:
 	if bool(_result.get("aborted", false)):
 		title = "МАТЧ ПРЕРВАН"
 		color = Color("#A6B4D2")
-		subtitle_label.text = _reason_text(str(_result.get("reason", "")))
+		subtitle_label.text = MatchSession.abort_reason_text(int(_result.get("reason", MatchSession.AbortReason.NONE)) as MatchSession.AbortReason)
 		rematch_button.disabled = _online
 	elif local_teams.size() == 1:
 		var won := local_teams.has(winner)
@@ -121,16 +121,5 @@ func _set_status(text: String) -> void:
 func _preview_result() -> Dictionary:
 	return {
 		"match_setup": preview_setup, "scores": [7, 4], "winner_team": 0, "local_teams": [0],
-		"team_names": ["Ты", "Бот"], "online": false, "aborted": false, "reason": "",
+		"team_names": ["Ты", "Бот"], "online": false, "aborted": false, "reason": MatchSession.AbortReason.NONE,
 	}
-
-
-static func _reason_text(reason: String) -> String:
-	match reason:
-		"opponent_left":
-			return "Соперник отключился"
-		"sync_error":
-			return "Связь потеряна"
-		"handshake_timeout", "opponent_missing":
-			return "Соперник не подключился"
-	return "Матч остановлен"

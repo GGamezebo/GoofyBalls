@@ -18,11 +18,15 @@ func initialize(_data: Dictionary) -> void:
 		"os": OS.get_name(),
 		"debug": OS.is_debug_build(),
 	})
+	
 	_listener.add(root_events.ev_start_game, _on_start_game)
 	_listener.add(root_events.ev_exit_game, _on_exit_game)
 	_listener.add(root_events.ev_return_to_menu, _on_return_to_menu)
 	# The platform branch is picked inside App/Platform (PlatformRouterContext), never here.
-	add_event("ev.open_platform", {"platform_caps": platform_caps, "root_events": root_events})
+	add_event("ev.open_platform", {
+		"platform_caps": platform_caps, 
+		"root_events": root_events
+	})
 	add_event("ev.open_online")
 
 

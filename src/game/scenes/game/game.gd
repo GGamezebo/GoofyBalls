@@ -107,7 +107,7 @@ func _process(_delta: float) -> void:
 		return
 	_gate.release(_session.confirmed_tick())
 	if _gate.is_over_confirmed() and int(_sim.state["phase_ticks"]) >= end_linger_ticks:
-		_finish(false, "")
+		_finish(false, MatchSession.AbortReason.NONE)
 
 
 func _on_ticked(tick: int) -> void:
@@ -144,20 +144,20 @@ func _on_session_stopped() -> void:
 	if _finished:
 		return
 	if _sim.is_match_over():
-		_finish(false, "")
+		_finish(false, MatchSession.AbortReason.NONE)
 	else:
-		_abort("stopped")
+		_abort(MatchSession.AbortReason.STOPPED)
 
 
-func _on_session_aborted(reason: String) -> void:
+func _on_session_aborted(reason: MatchSession.AbortReason) -> void:
 	_abort(reason)
 
 
-func _abort(reason: String) -> void:
+func _abort(reason: MatchSession.AbortReason) -> void:
 	if _finished:
 		return
-	_log.warn("match_abort", {"reason": reason, "tick": int(_sim.state["tick"])})
-	game_events.ev_status.emit(_reason_text(reason))
+	_log.warn("match_abort", {"reason": MatchSession.abort_reason_name(reason), "tick": int(_sim.state["tick"])})
+	game_events.ev_status.emit(MatchSession.abort_reason_text(reason))
 	_finished = true
 	_session.shutdown()
 	await get_tree().create_timer(abort_delay_sec).timeout
@@ -166,7 +166,7 @@ func _abort(reason: String) -> void:
 	root_events.ev_exit_game.emit(_build_result(true, reason))
 
 
-func _finish(aborted: bool, reason: String) -> void:
+func _finish(aborted: bool, reason: MatchSession.AbortReason) -> void:
 	_finished = true
 	_session.shutdown()
 	var result := _build_result(aborted, reason)
@@ -197,7 +197,7 @@ func _on_probe_requested() -> void:
 	hud.net_overlay.show_probe_result(result)
 
 
-func _build_result(aborted: bool, reason: String) -> Dictionary:
+func _build_result(aborted: bool, reason: MatchSession.AbortReason) -> Dictionary:
 	return {
 		"match_setup": _setup,
 		"scores": (_sim.state["scores"] as Array).duplicate(),
@@ -237,16 +237,3 @@ func _mode_name() -> String:
 	if _online:
 		return "online"
 	return "local_2p" if _setup.local_human_count() > 1 else "vs_ai"
-
-
-static func _reason_text(reason: String) -> String:
-	match reason:
-		"opponent_left":
-			return "Соперник отключился"
-		"sync_error":
-			return "Связь потеряна"
-		"handshake_timeout", "opponent_missing":
-			return "Соперник не подключился"
-		"stopped":
-			return "Матч остановлен"
-	return "Матч прерван"
