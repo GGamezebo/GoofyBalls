@@ -46,6 +46,14 @@ func bind_sim(slot_count: int, sample: Callable, step: Callable, save_fn: Callab
 	_neutral = neutral
 
 
+## Begin the match; call after `bind_sim()` and once the session is in the tree.
+## `slot_peers[i]` = peer id that owns slot i (offline ignored). Offline starts at once; online
+## runs the handshake. false = could not begin (`ev_aborted` was already emitted).
+func setup(_slot_peers: Array[int], _log_channel: LogChannel) -> bool:
+	start()
+	return true
+
+
 func start() -> void:
 	pass
 
@@ -77,3 +85,13 @@ func is_online() -> bool:
 ## Numbers for the net overlay; empty for local play.
 func get_stats() -> Dictionary:
 	return {}
+
+
+## Titles of the network emulation presets the debug overlay may offer; empty = none (offline).
+func lag_preset_titles() -> Array[String]:
+	return []
+
+
+## Switch network emulation to preset `index` of `lag_preset_titles()`; no-op when out of range.
+func select_lag_preset(_index: int) -> void:
+	pass

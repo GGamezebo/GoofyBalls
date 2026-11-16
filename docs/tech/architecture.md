@@ -102,6 +102,7 @@ MatchSession: Local | Rollback(P2P или relay) | Authoritative (только �
 
 ## 8. Сеть
 ### Сессии
+- `game` держит только `MatchSession`: конкретный класс выбирает `MatchSessionFactory.create(online, tuning, transport, lag_presets)`, дальше всё идёт через базовый API (`bind_sim`, `setup`, `lag_preset_titles`, `select_lag_preset`).
 - `LocalSession`: против AI и вдвоём на одном ПК (кнопку «Вдвоём» показывает только `DesktopContext` через `PlatformCaps`).
 - `RollbackSession`: `SyncManager` поверх Nakama relay. Поддерживает несколько peer-ов, ориентир — до 8 игроков. Один узел `RollbackInput` на слот, authority = `peer_id` слота из `MatchSetup`.
 - Ручки rollback — `NetTuning` (`.tres`): задержка ввода (2 тика), буфер отката (60 тиков = 1 с: задержки Wi‑Fi до секунды прячутся откатом, а не замиранием), до 10 с на восстановление синхронизации, лимиты сообщений, допуск рассинхрона. Пока синхронизация потеряна, `RollbackSession` обходит две взаимоблокировки аддона: пересчитывает последний тик каждый кадр и отправляет весь неподтверждённый ввод заново.

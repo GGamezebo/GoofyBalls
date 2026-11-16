@@ -49,10 +49,8 @@ func initialize(data: Dictionary) -> void:
 	_online = _setup.has_remote_peers(my_id)
 	_inputs = MatchInputs.new(_setup, my_id, _sim, ai_profile)
 
-	if _online:
-		_session = RollbackSession.new()
-	else:
-		_session = LocalSession.new()
+	var transport: PeerTransport = net_link.transport if net_link != null else null
+	_session = MatchSessionFactory.create(_online, net_tuning, transport, lag_profiles)
 	_session.name = "Session"
 	session_parent.add_child(_session)
 	_session.bind_sim(_inputs.slot_count(), _inputs.sample, _step, _sim.save_state, _sim.load_state, VolleySim.neutral_input())
@@ -72,11 +70,7 @@ func initialize(data: Dictionary) -> void:
 	_listener.add(hud.net_overlay.ev_lag_preset_selected, _on_lag_preset_selected)
 	_listener.add(hud.net_overlay.ev_probe_requested, _on_probe_requested)
 	hud.net_overlay.bind_stats(_session.get_stats)
-	var lag_titles: Array[String] = []
-	if _online:
-		for profile in lag_profiles:
-			lag_titles.append(profile.title)
-	hud.net_overlay.set_lag_presets(lag_titles)
+	hud.net_overlay.set_lag_presets(_session.lag_preset_titles())
 
 	var local_slots := _inputs.local_slots()
 	match_view.setup(_sim, _setup, local_slots)
@@ -86,15 +80,10 @@ func initialize(data: Dictionary) -> void:
 		"mode": _mode_name(), "seed": _setup.match_seed, "players": _sim.player_count(),
 		"teams": _sim.team_count(), "me": my_id,
 	})
-	if _online:
-		var slot_peers: Array[int] = []
-		for slot in _setup.slots():
-			slot_peers.append(slot.peer_id)
-		(_session as RollbackSession).tuning = net_tuning
-		(_session as RollbackSession).transport = net_link.transport if net_link != null else null
-		(_session as RollbackSession).setup(slot_peers, LogChannel.new("net", log_settings))
-	else:
-		_session.start()
+	var slot_peers: Array[int] = []
+	for slot in _setup.slots():
+		slot_peers.append(slot.peer_id)
+	_session.setup(slot_peers, LogChannel.new("net", log_settings))
 
 
 func deinit() -> void:
@@ -197,8 +186,7 @@ func _on_exit_requested() -> void:
 
 
 func _on_lag_preset_selected(index: int) -> void:
-	if _session is RollbackSession and index >= 0 and index < lag_profiles.size():
-		(_session as RollbackSession).set_lag_profile(lag_profiles[index])
+	_session.select_lag_preset(index)
 
 
 func _on_probe_requested() -> void:
