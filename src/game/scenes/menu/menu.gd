@@ -58,7 +58,7 @@ func _refresh_caps() -> void:
 
 
 func _start_local(template: MatchSetup) -> void:
-	var setup := template.duplicate(true) as MatchSetup
-	setup.match_seed = randi()
-	_log.info("start_local", {"humans": setup.local_human_count()})
-	root_events.ev_start_game.emit({"match_setup": setup})
+	var match_setup := template.duplicate(true) as MatchSetup
+	match_setup.match_seed = randi()
+	_log.info("start_local", {"humans": match_setup.local_human_count()})
+	root_events.ev_start_game.emit({"match_setup": match_setup})
