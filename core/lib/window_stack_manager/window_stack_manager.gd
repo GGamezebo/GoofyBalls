@@ -5,6 +5,15 @@ extends Node
 ## Forward: ButtonWindowTransition children (button → open target).
 ## Back: ButtonWindowBack children (button → pop) or close_stacked_window() / ui_cancel.
 ## Dialogs/overlays must NOT go through this stack.
+## Back on ui_cancel is handled in `_unhandled_input`, so a dialog or control that consumes the
+## event first keeps the window open.
+
+## A window was shown by the stack (opened, or revealed again after the one above it closed).
+@warning_ignore("unused_signal")
+signal ev_opened(window: Control)
+## A window was hidden by the stack (closed, or covered by the window opened above it).
+@warning_ignore("unused_signal")
+signal ev_closed(window: Control)
 
 @export_category("Stacked windows")
 @export var default_window: Control
@@ -87,7 +96,7 @@ func can_go_back() -> bool:
 	return window_stack.size() > 1
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	if not can_go_back():
@@ -100,12 +109,14 @@ func _show_window(window: Control) -> void:
 	window.show()
 	if window.has_method("on_window_enter"):
 		window.on_window_enter()
+	ev_opened.emit(window)
 
 
 func _hide_window(window: Control) -> void:
 	if window.has_method("on_window_exit"):
 		window.on_window_exit()
 	window.hide()
+	ev_closed.emit(window)
 
 
 func _grab_focus_in(window: Control) -> void:
