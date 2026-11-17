@@ -22,13 +22,16 @@ signal ev_set_server(address: String)
 # --- answers (online → UI) ---
 @warning_ignore("unused_signal")
 signal ev_room_created(code: String)
-## Progress line for the friend window ("" hides it).
+## Progress of opening a room (the friend window turns it into text).
 @warning_ignore("unused_signal")
-signal ev_room_status(text: String)
+signal ev_room_status(status: RoomFlow.RoomStatus)
 @warning_ignore("unused_signal")
-signal ev_room_error(text: String)
-## Results screen: rematch progress ("Ждём соперника…").
+signal ev_room_error(error: RoomFlow.RoomError)
+## The address from `ev_set_server` was rejected; the previous server stays.
 @warning_ignore("unused_signal")
-signal ev_rematch_status(text: String)
+signal ev_server_address_invalid(address: String)
+## Results screen: rematch progress.
+@warning_ignore("unused_signal")
+signal ev_rematch_status(status: RoomFlow.RematchStatus)
 @warning_ignore("unused_signal")
 signal ev_opponent_left

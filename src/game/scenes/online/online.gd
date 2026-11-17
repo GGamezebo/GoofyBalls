@@ -34,4 +34,4 @@ func _on_set_server(address: String) -> void:
 	if online_config.set_address(address):
 		_log.info("server_changed", {"server": online_config.address()})
 	else:
-		online_events.ev_room_error.emit("Адрес вида 192.168.1.10:7350")
+		online_events.ev_server_address_invalid.emit(address)

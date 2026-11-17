@@ -15,6 +15,11 @@ const OVERRIDE_PATH := "user://online.cfg"
 @export var server_key: String = "goofyball_dev_key"
 @export var use_ssl: bool = false
 @export var timeout_sec: int = 5
+@export_group("Room")
+## Give up joining the relayed room match after this long.
+@export var join_timeout_sec: float = 12.0
+## Longer player names from the other peer are cut to this many characters.
+@export var max_name_length: int = 24
 @export_group("Direct link (WebRTC)")
 ## Play over a direct UDP link when it can be set up; the relay stays as the fallback.
 @export var p2p_enabled: bool = true

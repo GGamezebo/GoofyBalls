@@ -20,8 +20,8 @@
 | Настройки rollback в `.tres`: задержка ввода 2 тика, буфер 60 тиков (1 с), до 10 с на восстановление синхронизации | `src/features/match_session/net_tuning.tres` |
 | Эмуляция плохой сети (debug): Wi‑Fi, 4G, плохая сеть | `lag_network_adaptor.gd`, `lag_profiles/*.tres` |
 | Плавность: интерполяция между тиками + сглаживание поправок после отката (мелкие гаснут за ~0,1 с, большие «доезжают» не быстрее 25 м/с: 2 м ≈ 0,27 с) | `src/game/scenes/game/match_view.gd`, `correction_smoother.gd` |
-| Комнаты по коду: гостевой вход по id устройства, код из 4 символов, seed от сервера, реванш без новой комнаты | `src/features/online/room_flow.gd`, `src/game/scenes/online/`, `server/` |
-| Прямое соединение игроков в комнате: UDP через WebRTC (P2P), запасной путь — relay | `src/features/online/webrtc_transport.gd`, `addons/webrtc_native`, `src/common/net/` |
+| Комнаты по коду: гостевой вход по id устройства, код из 4 символов, seed от сервера, реванш без новой комнаты | `src/features/nakama_room/room_flow.gd`, `src/game/scenes/online/`, `server/` |
+| Прямое соединение игроков в комнате: UDP через WebRTC (P2P), запасной путь — relay | `src/features/nakama_room/webrtc_transport.gd`, `addons/webrtc_native`, `src/common/net/` |
 | Экраны по концептам: главная, «С другом», матч (HUD, пауза), итоги | `src/game/scenes/{menu,game,post_battle}/` |
 | Тач: левая половина — движение, правая — прыжок | `src/features/virtual_controls/` |
 | Сетевой оверлей F3: ping, откаты, рассинхроны, FPS, эмуляция, проверка детерминизма | `src/features/net_overlay/` |
@@ -204,7 +204,7 @@ godot --headless --path . --script res://tests/e2e/nakama_peer.gd -- role=guest 
 | Правила (до скольких очков, касания, паузы) | `src/common/presets/rules_points_7.tres` |
 | Задержка ввода и буфер отката | `src/features/match_session/net_tuning.tres` |
 | Пресеты эмуляции сети | `src/features/match_session/lag_profiles/` |
-| Адрес и ключ сервера по умолчанию | `src/features/online/online_config.tres` |
+| Адрес и ключ сервера по умолчанию | `src/features/nakama_room/online_config.tres` |
 | Уровни логов | `src/common/log_settings.tres` |
 
 После изменения физики пересчитай эталон детерминизма (раздел 7).

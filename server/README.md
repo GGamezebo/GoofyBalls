@@ -40,7 +40,7 @@ Windows спросит разрешение брандмауэра для Docker
 - Наружу открыт только 7350. Postgres доступен только контейнеру Nakama, консоль 7351 — только с этого компьютера.
 - Перед тем как открывать порт в интернет, поменяй в `.env` всё: `POSTGRES_PASSWORD`, `NAKAMA_CONSOLE_PASSWORD`,
   `NAKAMA_SESSION_KEY`, `NAKAMA_REFRESH_KEY`, `NAKAMA_CONSOLE_SIGNING_KEY`, `NAKAMA_HTTP_KEY`, `NAKAMA_SERVER_KEY`.
-- Если меняешь `NAKAMA_SERVER_KEY`, тот же ключ нужен в игре: `server_key` в `src/features/online/online_config.tres`
+- Если меняешь `NAKAMA_SERVER_KEY`, тот же ключ нужен в игре: `server_key` в `src/features/nakama_room/online_config.tres`
   (пересборка) или строка `server_key=...` в секции `[nakama]` файла `user://online.cfg` на каждом устройстве.
 
 ## Честная проверка задержки

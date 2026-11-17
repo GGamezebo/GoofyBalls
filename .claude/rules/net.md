@@ -1,6 +1,6 @@
 ---
 paths:
-  - "src/features/online/**"
+  - "src/features/nakama_room/**"
   - "server/**"
 ---
 # Online / server

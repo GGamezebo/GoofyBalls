@@ -37,7 +37,7 @@ func _run() -> void:
 	await process_frame
 	var role := "host" if _host else "guest"
 	var online_events = load("res://src/game/scenes/online/online_events.tres")
-	online_events.ev_room_error.connect(func(text: String) -> void: _failed = "room error: " + text)
+	online_events.ev_room_error.connect(func(error: RoomFlow.RoomError) -> void: _failed = "room error: " + RoomFlow.RoomError.keys()[error])
 	online_events.ev_room_created.connect(func(code: String) -> void:
 		var file := FileAccess.open(_code_file, FileAccess.WRITE)
 		file.store_string(code)

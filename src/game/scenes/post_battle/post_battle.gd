@@ -36,7 +36,7 @@ func initialize(data: Dictionary) -> void:
 	_online = bool(_result.get("online", false))
 	_listener.add(rematch_button.pressed, _on_rematch)
 	_listener.add(next_button.pressed, _on_next)
-	_listener.add(online_events.ev_rematch_status, _set_status)
+	_listener.add(online_events.ev_rematch_status, func(status: RoomFlow.RematchStatus) -> void: _set_status(_rematch_text(status)))
 	_listener.add(online_events.ev_opponent_left, _on_opponent_left)
 	_show_result()
 	next_button.grab_focus()
@@ -113,6 +113,17 @@ func _on_next() -> void:
 func _on_opponent_left() -> void:
 	rematch_button.disabled = true
 	_set_status("Соперник вышел из комнаты")
+
+
+static func _rematch_text(status: RoomFlow.RematchStatus) -> String:
+	match status:
+		RoomFlow.RematchStatus.OPPONENT_GONE:
+			return "Соперник уже вышел"
+		RoomFlow.RematchStatus.WAITING_OPPONENT:
+			return "Ждём соперника…"
+		RoomFlow.RematchStatus.OPPONENT_WANTS:
+			return "Соперник хочет реванш!"
+	return ""
 
 
 func _set_status(text: String) -> void:

@@ -6,7 +6,7 @@ Folders (pick the first that fits; create a folder only on its first real use):
 - `core/theme/` — neutral base `Theme`/`StyleBox` with no game palette or `assets/` refs (none yet). Game theme (palette, Nunito, goofy style) → `src/ui/theme/goofy_theme.tres`.
 - `core/shaders/` — generic shaders/`ShaderMaterial` presets: outline, flash, dissolve, blur. Entity-specific shader stays with the entity.
 - `core/editor/` — generic `@tool` helpers, editor previews, inspectors. Full `EditorPlugin`s live in `addons/` (Godot convention).
-- `core/net/` — transport/net utils with no game or backend knowledge (input buffers, packet codecs, lag emulation math). Nakama rooms/sessions → `src/features/online`, rollback wiring → `src/features/match_session`.
+- `core/net/` — transport/net utils with no game or backend knowledge (input buffers, packet codecs, lag emulation math). Nakama rooms/sessions → `src/features/nakama_room`, rollback wiring → `src/features/match_session`.
 Placement:
 - `lib` vs `systems`: a thing you call/instantiate → `lib`; a running thing with data + lifecycle → `systems`.
 - Mixed code → split: generic part to `core/`, game wiring/tuning `.tres` in `src/`.

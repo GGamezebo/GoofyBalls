@@ -9,19 +9,58 @@ extends Node
 ## on the relay → the host starts every rematch for both.
 ## The connection lives until `leave()`, so a rematch needs no new room. Two players max.
 
+## Texts for these codes belong to the UI that shows them; the feature only reports what happened.
 signal ev_room_created(code: String)
-signal ev_status(text: String)
-signal ev_error(text: String)
-## {"seed", "round", "host_peer", "guest_peer", "host_name", "guest_name"}
-signal ev_match_ready(info: Dictionary)
-signal ev_rematch_status(text: String)
+signal ev_status(status: RoomStatus)
+## The room is gone (the connection was already dropped).
+signal ev_error(error: RoomError)
+signal ev_match_ready(room_match: RoomMatch)
+signal ev_rematch_status(status: RematchStatus)
 signal ev_opponent_left
 ## The direct link to the opponent appeared (or went away: null).
 signal ev_transport_changed(transport: PeerTransport)
 
 enum State { IDLE, CONNECTING, WAITING, IN_MATCH }
 
-const JOIN_TIMEOUT_SEC := 12.0
+## Progress of opening a room.
+enum RoomStatus {
+	CONNECTING_SERVER,
+	CREATING_ROOM,
+	JOINING_FRIEND,
+	## Guest is in the match, the host has not started it yet.
+	WAITING_HOST,
+	FRIEND_JOINED,
+	## Host: the friend left before the match, the room waits for them again.
+	FRIEND_LEFT,
+	CONNECTING_DIRECT,
+}
+
+## Why the room could not be opened or was lost.
+enum RoomError {
+	NONE,
+	## Sign-in or socket failed: the server at `OnlineConfig.address()` is unreachable.
+	NO_SERVER,
+	CREATE_FAILED,
+	ROOM_NOT_FOUND,
+	JOIN_FAILED,
+	TOO_MANY_ATTEMPTS,
+	MATCH_JOIN_FAILED,
+	SERVER_LOST,
+	ROOM_FULL,
+}
+
+enum RematchStatus {
+	OPPONENT_GONE,
+	WAITING_OPPONENT,
+	OPPONENT_WANTS,
+}
+
+## Error codes of the server RPC `room_join` (server/).
+const SERVER_ROOM_NOT_FOUND := "room_not_found"
+const SERVER_RATE_LIMITED := "rate_limited"
+const SERVER_TOO_MANY_ATTEMPTS := "too_many_attempts"
+
+## Part of the protocol, not a tuning knob: both peers derive every round's seed with it.
 const SEED_STEP := 7919
 
 @export var nakama_node: Node
@@ -82,12 +121,12 @@ func create_room() -> void:
 	_log.info("room_create_requested", {"server": _config.address()})
 	if not await _connect():
 		return
-	ev_status.emit("Создаём комнату…")
+	ev_status.emit(RoomStatus.CREATING_ROOM)
 	var result := await client.rpc_async("room_create", {})
 	if _state != State.CONNECTING:
 		return
 	if not bool(result.get("ok", false)):
-		_fail("room_create_failed", "Не удалось создать комнату", {"error": client.last_error})
+		_fail("room_create_failed", RoomError.CREATE_FAILED, {"error": client.last_error})
 		return
 	_code = str(result["code"])
 	_base_seed = int(result.get("seed", randi()))
@@ -109,25 +148,22 @@ func join_room(code: String) -> void:
 		return
 	if not bool(result.get("ok", false)):
 		var error := str(result.get("error", client.last_error))
-		var text := "Комната %s не найдена" % code if error == "room_not_found" else "Не удалось войти в комнату"
-		if error == "rate_limited" or error == "too_many_attempts":
-			text = "Слишком много попыток, подожди немного"
-		_fail("room_join_failed", text, {"code": code, "error": error})
+		_fail("room_join_failed", _join_error(error), {"code": code, "error": error})
 		return
 	_code = code
 	_base_seed = int(result.get("seed", 0))
-	ev_status.emit("Подключаемся к другу…")
+	ev_status.emit(RoomStatus.JOINING_FRIEND)
 	if await _join_match(str(result["match_name"])):
 		_state = State.WAITING
 
 
 func request_rematch() -> void:
 	if _state != State.IN_MATCH or _opponent_peer == 0:
-		ev_rematch_status.emit("Соперник уже вышел")
+		ev_rematch_status.emit(RematchStatus.OPPONENT_GONE)
 		return
 	_rematch[multiplayer.get_unique_id()] = true
 	_rpc_rematch.rpc_id(_opponent_peer)
-	ev_rematch_status.emit("Ждём соперника…")
+	ev_rematch_status.emit(RematchStatus.WAITING_OPPONENT)
 	_log.info("rematch_requested", {"round": _round})
 	_check_rematch()
 
@@ -159,9 +195,9 @@ func leave() -> void:
 # --- connection -------------------------------------------------------------------------
 
 func _connect() -> bool:
-	ev_status.emit("Подключаемся к серверу…")
+	ev_status.emit(RoomStatus.CONNECTING_SERVER)
 	if not await client.sign_in_async(_profile):
-		_fail("sign_in_failed", _no_server_text(), {"error": client.last_error, "server": _config.address()})
+		_fail("sign_in_failed", RoomError.NO_SERVER, {"error": client.last_error, "server": _config.address()})
 		return false
 	if _state != State.CONNECTING:
 		return false
@@ -170,7 +206,7 @@ func _connect() -> bool:
 	_socket.closed.connect(_on_socket_closed)
 	var connected = await _socket.connect_async(client.session)
 	if connected != null and connected.is_exception():
-		_fail("socket_failed", _no_server_text(), {"error": str(connected.get_exception().message), "server": _config.address()})
+		_fail("socket_failed", RoomError.NO_SERVER, {"error": str(connected.get_exception().message), "server": _config.address()})
 		return false
 	_bridge = NakamaMultiplayerBridge.new(_socket)
 	multiplayer.multiplayer_peer = _bridge.multiplayer_peer
@@ -192,17 +228,17 @@ func _join_match(match_name: String) -> bool:
 	_bridge.match_join_error.connect(on_error, CONNECT_ONE_SHOT)
 	_bridge.join_named_match(match_name)
 	var waited := 0.0
-	while not bool(outcome["done"]) and waited < JOIN_TIMEOUT_SEC:
+	while not bool(outcome["done"]) and waited < _config.join_timeout_sec:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
 		if _bridge == null:
 			return false
 	if not bool(outcome["ok"]):
-		_fail("match_join_failed", "Не удалось подключиться к комнате", {"error": outcome["error"] if outcome["done"] else "timeout"})
+		_fail("match_join_failed", RoomError.MATCH_JOIN_FAILED, {"error": outcome["error"] if outcome["done"] else "timeout"})
 		return false
 	_log.info("match_joined", {"code": _code, "peer": multiplayer.get_unique_id(), "host": multiplayer.is_server()})
 	if not multiplayer.is_server():
-		ev_status.emit("Ждём хозяина комнаты…")
+		ev_status.emit(RoomStatus.WAITING_HOST)
 	return true
 
 
@@ -218,7 +254,7 @@ func _on_peer_connected(peer_id: int) -> void:
 	else:
 		return
 	_log.info("peer_connected", {"peer": peer_id})
-	ev_status.emit("Друг подключился!")
+	ev_status.emit(RoomStatus.FRIEND_JOINED)
 	_rpc_hello.rpc_id(peer_id, display_name)
 
 
@@ -231,7 +267,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_close_transport()
 	ev_opponent_left.emit()
 	if _state == State.WAITING and multiplayer.is_server():
-		ev_status.emit("Друг вышел. Ждём снова…")
+		ev_status.emit(RoomStatus.FRIEND_LEFT)
 	elif _state == State.IN_MATCH:
 		leave()
 
@@ -245,7 +281,7 @@ func _on_socket_closed() -> void:
 		ev_opponent_left.emit()
 	leave()
 	if not was_in_match:
-		ev_error.emit("Связь с сервером потеряна")
+		ev_error.emit(RoomError.SERVER_LOST)
 
 
 func _disconnect_multiplayer_signals() -> void:
@@ -255,19 +291,19 @@ func _disconnect_multiplayer_signals() -> void:
 		multiplayer.peer_disconnected.disconnect(_on_peer_disconnected)
 
 
-## 127.0.0.1 only works when the server runs on this same device (PC); on a phone it points
-## at the phone itself, so say what to type instead.
-func _no_server_text() -> String:
-	var text := "Нет связи с сервером %s" % _config.address()
-	if _config.host == "127.0.0.1" or _config.host == "localhost":
-		text += ".\n127.0.0.1 — это само устройство. Впиши в «Сервер» IP компьютера с сервером, например 192.168.1.10:7350"
-	return text
+static func _join_error(server_error: String) -> RoomError:
+	match server_error:
+		SERVER_ROOM_NOT_FOUND:
+			return RoomError.ROOM_NOT_FOUND
+		SERVER_RATE_LIMITED, SERVER_TOO_MANY_ATTEMPTS:
+			return RoomError.TOO_MANY_ATTEMPTS
+	return RoomError.JOIN_FAILED
 
 
-func _fail(event: String, text: String, kv: Dictionary) -> void:
+func _fail(event: String, error: RoomError, kv: Dictionary) -> void:
 	_log.warn(event, kv)
 	leave()
-	ev_error.emit(text)
+	ev_error.emit(error)
 
 
 # --- room RPCs (same node path on both peers) ---------------------------------------------
@@ -277,7 +313,7 @@ func _rpc_hello(peer_name: String) -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	if sender != _opponent_peer and not (sender == 1 and not multiplayer.is_server()):
 		return
-	_names[sender] = peer_name.left(24)
+	_names[sender] = peer_name.left(_config.max_name_length)
 	_log.info("hello", {"peer": sender})
 	if multiplayer.is_server() and _state == State.WAITING:
 		_begin_p2p()
@@ -293,7 +329,7 @@ func _begin_p2p() -> void:
 		return
 	_p2p_started_ms = Time.get_ticks_msec()
 	_p2p_wait_left = _config.p2p_timeout_sec
-	ev_status.emit("Соединяемся напрямую…")
+	ev_status.emit(RoomStatus.CONNECTING_DIRECT)
 	_log.info("p2p_begin", {"peer": _opponent_peer})
 	_rpc_p2p_prepare.rpc_id(_opponent_peer)
 
@@ -369,7 +405,7 @@ func _rpc_rematch() -> void:
 	if sender != _opponent_peer:
 		return
 	_rematch[sender] = true
-	ev_rematch_status.emit("Соперник хочет реванш!")
+	ev_rematch_status.emit(RematchStatus.OPPONENT_WANTS)
 	_check_rematch()
 
 
@@ -377,7 +413,7 @@ func _rpc_rematch() -> void:
 func _rpc_room_full() -> void:
 	_log.warn("room_full")
 	leave()
-	ev_error.emit("Комната занята: в ней уже двое")
+	ev_error.emit(RoomError.ROOM_FULL)
 
 
 func _check_rematch() -> void:
@@ -399,16 +435,13 @@ func _emit_ready(host_name: String, guest_name: String) -> void:
 	_state = State.IN_MATCH
 	_rematch.clear()
 	var guest_peer := _opponent_peer if multiplayer.is_server() else multiplayer.get_unique_id()
-	var info := {
-		"seed": (_base_seed + _round * SEED_STEP) & 0x7FFFFFFF,
-		"round": _round,
-		"host_peer": 1,
-		"guest_peer": guest_peer,
-		"host_name": host_name,
-		"guest_name": guest_name,
-	}
+	var room_match := RoomMatch.new()
+	room_match.match_seed = (_base_seed + _round * SEED_STEP) & 0x7FFFFFFF
+	room_match.round_index = _round
+	room_match.peer_ids = [1, guest_peer]
+	room_match.names = [host_name, guest_name]
 	_log.info("match_ready", {"code": _code, "round": _round, "guest_peer": guest_peer})
-	ev_match_ready.emit(info)
+	ev_match_ready.emit(room_match)
 
 
 static func _cmdline_profile() -> String:

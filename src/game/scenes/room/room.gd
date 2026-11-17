@@ -26,9 +26,9 @@ func initialize(data: Dictionary) -> void:
 	room_flow.setup(online_config, _log)
 	_listener.add(online_events.ev_rematch_request, room_flow.request_rematch)
 	_listener.add(room_flow.ev_room_created, func(code: String) -> void: online_events.ev_room_created.emit(code))
-	_listener.add(room_flow.ev_status, func(text: String) -> void: online_events.ev_room_status.emit(text))
+	_listener.add(room_flow.ev_status, func(status: RoomFlow.RoomStatus) -> void: online_events.ev_room_status.emit(status))
 	_listener.add(room_flow.ev_error, _on_error)
-	_listener.add(room_flow.ev_rematch_status, func(text: String) -> void: online_events.ev_rematch_status.emit(text))
+	_listener.add(room_flow.ev_rematch_status, func(status: RoomFlow.RematchStatus) -> void: online_events.ev_rematch_status.emit(status))
 	_listener.add(room_flow.ev_opponent_left, _on_opponent_left)
 	_listener.add(room_flow.ev_match_ready, _on_match_ready)
 	_listener.add(room_flow.ev_transport_changed, _on_transport_changed)
@@ -50,8 +50,8 @@ func deinit() -> void:
 
 
 ## RoomFlow already dropped the connection (no server, room full, socket lost): close the state.
-func _on_error(text: String) -> void:
-	online_events.ev_room_error.emit(text)
+func _on_error(error: RoomFlow.RoomError) -> void:
+	online_events.ev_room_error.emit(error)
 	_close()
 
 
@@ -78,13 +78,15 @@ func _on_transport_changed(transport: PeerTransport) -> void:
 	net_link.transport = transport
 
 
-func _on_match_ready(info: Dictionary) -> void:
+func _on_match_ready(room_match: RoomMatch) -> void:
 	var setup := online_setup.duplicate(true) as MatchSetup
 	var slots := setup.slots()
-	slots[0].peer_id = int(info["host_peer"])
-	slots[0].display_name = str(info["host_name"])
-	slots[1].peer_id = int(info["guest_peer"])
-	slots[1].display_name = str(info["guest_name"])
-	setup.match_seed = int(info["seed"])
-	_log.info("start_online_match", {"round": info["round"], "seed": setup.match_seed})
+	if slots.size() != room_match.player_count():
+		_log.error("setup_slot_mismatch", {"slots": slots.size(), "players": room_match.player_count()})
+		return
+	for i in slots.size():
+		slots[i].peer_id = room_match.peer_ids[i]
+		slots[i].display_name = room_match.names[i]
+	setup.match_seed = room_match.match_seed
+	_log.info("start_online_match", {"round": room_match.round_index, "seed": setup.match_seed})
 	root_events.ev_start_game.emit({"match_setup": setup})
