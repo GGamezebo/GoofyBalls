@@ -2,7 +2,7 @@ extends IScene
 
 ## Main menu context (concept/ui-home): hero blob, yellow launch block — «Против AI»,
 ## «С другом», and «Вдвоём на одном ПК» (only where PlatformCaps allows). Starts local battles with
-## `root_events.ev_start_game({"match_setup": ...})`; the friend-room flow lives in FriendRoomPanel.
+## `root_events.ev_start_game({"match_setup": ...})`; the friend-room flow lives in FriendWindow.
 
 @export var root_events: RootEvents
 @export var platform_caps: PlatformCaps
@@ -11,7 +11,7 @@ extends IScene
 @export var log_settings: LogSettings
 @export var vs_ai_button: Button
 @export var local_2p_button: Button
-@export var friend_room: FriendRoomPanel
+@export var friend_window: FriendWindow
 @export var hero_blob: BlobView
 @export var palette: TeamPalette
 ## Idle hop of the hero blob.
@@ -30,7 +30,7 @@ func initialize(_data: Dictionary) -> void:
 	_listener.add(local_2p_button.pressed, _start_local.bind(local_2p_setup))
 	_listener.add(platform_caps.changed, _refresh_caps)
 	_refresh_caps()
-	friend_room.initialize()
+	friend_window.initialize()
 	_hop = BlobIdle.new(hero_idle)
 	hero_blob.setup(palette.color(0), hero_radius_px, "", false)
 	hero_blob.name_label.visible = false
@@ -40,7 +40,7 @@ func initialize(_data: Dictionary) -> void:
 
 
 func deinit() -> void:
-	friend_room.deinit()
+	friend_window.deinit()
 	_listener.deinit()
 	super.deinit()
 

@@ -68,4 +68,4 @@ func _rig() -> Dictionary:
 
 func _free(rig: Dictionary) -> void:
 	for key in rig:
-		(rig[key] as Node).queue_free()
+		(rig[key] as Node).free()

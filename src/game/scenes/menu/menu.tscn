@@ -16,10 +16,9 @@
 [ext_resource type="Script" uid="uid://bcskwis6ebs5f" path="res://core/lib/window_stack_manager/window_stack_manager.gd" id="14_wsm"]
 [ext_resource type="Script" uid="uid://bb1j5h4a60ooo" path="res://core/lib/window_stack_manager/button_window_stack_transition.gd" id="15_fwd"]
 [ext_resource type="Script" uid="uid://dg8bdljs16a6h" path="res://core/lib/window_stack_manager/button_window_back.gd" id="16_back"]
-[ext_resource type="Script" uid="uid://bqvf6qj3c3lq3" path="res://src/game/scenes/menu/friend_room_panel.gd" id="17_frp"]
 [ext_resource type="Resource" path="res://src/game/scenes/menu/hero_idle.tres" id="18_idle"]
 
-[node name="Menu" type="Control" unique_id=810117836 node_paths=PackedStringArray("vs_ai_button", "local_2p_button", "friend_room", "hero_blob")]
+[node name="Menu" type="Control" unique_id=810117836 node_paths=PackedStringArray("vs_ai_button", "local_2p_button", "friend_window", "hero_blob")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,7 +34,7 @@ local_2p_setup = ExtResource("7_2p")
 log_settings = ExtResource("8_log")
 vs_ai_button = NodePath("Windows/MainWindow/LaunchBlock/VsAi")
 local_2p_button = NodePath("Windows/MainWindow/LaunchBlock/Local2P")
-friend_room = NodePath("Windows/FriendRoom")
+friend_window = NodePath("Windows/FriendWindow")
 hero_blob = NodePath("Windows/MainWindow/HeroAnchor/Hero")
 palette = ExtResource("9_pal")
 hero_idle = ExtResource("18_idle")
@@ -168,6 +167,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("13_fw")
+online_events = ExtResource("3_online_ev")
+online_config = ExtResource("5_cfg")
 create_button = NodePath("Center/Panel/Box/Cards/Create/Box/CreateButton")
 code_box = NodePath("Center/Panel/Box/Cards/Create/Box/CodeBox")
 code_label = NodePath("Center/Panel/Box/Cards/Create/Box/CodeBox/Code")
@@ -344,12 +345,6 @@ layout_mode = 2
 theme_type_variation = &"GhostButton"
 theme_override_font_sizes/font_size = 26
 text = "Сохранить"
-
-[node name="FriendRoom" type="Node" parent="Windows" unique_id=1737204745 node_paths=PackedStringArray("window")]
-script = ExtResource("17_frp")
-online_events = ExtResource("3_online_ev")
-online_config = ExtResource("5_cfg")
-window = NodePath("../FriendWindow")
 
 [node name="StackManager" type="Node" parent="." unique_id=864102258 node_paths=PackedStringArray("default_window")]
 script = ExtResource("14_wsm")
