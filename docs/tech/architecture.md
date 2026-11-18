@@ -14,7 +14,7 @@
 |---|---|
 | `main.tscn` → `src/game/main.gd` | Запуск HFSM приложения |
 | `src/game/hfsm/app_hfsm.json` | Фазы приложения: `App` → `Menu` / `Battle` / `PostBattle`; параллельно `Platform` (`WEB` / `Android` / `Desktop`) и `Online` → `Room` (комната с другом) |
-| `src/game/scenes/{app_root,online,room,menu,game,post_battle}` | Экраны и контексты — только оркестрация (`IScene`: `initialize` / `deinit` / `on_event`). `online` переводит запросы `OnlineEvents` в события HFSM; `room` (состояние `App/Online/Room`) держит соединение с Nakama, пока игрок в комнате. `game` хранит и правила боя — детерминированную симуляцию `game/volley_sim/` (+`phases/` — фазы матча на FSM, `buffs/`), как `game_logic` в quizmatik |
+| `src/game/scenes/{app_root,online,room,menu,game,post_battle}` | Экраны и контексты — только оркестрация (`IScene`: `initialize` / `deinit` / `on_event`). `online` переводит запросы `OnlineEvents` в события HFSM; `room` (состояние `App/Online/Room`) держит соединение с Nakama, пока игрок в комнате. `game` хранит и правила боя — детерминированную симуляцию `game/volley_sim/` (+`phases/` — фазы матча на FSM, `state/` — типизированное состояние, `buffs/`), как `game_logic` в quizmatik |
 | `src/features/{name}/` | Изолированные фичи: `match_session` (сессии, настройки rollback, эмуляция сети), `court_view`, `buff_fx`, `nakama_room` (клиент Nakama, протокол комнаты, WebRTC), `net_overlay`, `virtual_controls`, `ai_opponent` |
 | `src/entities/{name}/` | Игровые сущности, собранные из общих компонентов: `blob`, `ball`. Друг друга не импортируют |
 | `src/entities/components/{name}/` | Общие компоненты сущностей, зависящие от игры: `floor_shadow`. Используются только сущностями |
