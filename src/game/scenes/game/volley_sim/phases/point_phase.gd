@@ -5,12 +5,12 @@ extends SimPhase
 ## After `point_pause_ticks` → MATCH_END when someone reached `win_score`, else the next SERVE.
 
 
-static func get_state() -> String:
-	return SimPhaseStates.POINT
+func _init(sim: VolleySim) -> void:
+	super(VolleySim.Phase.POINT, sim)
 
 
-func _init() -> void:
-	super(get_state(), VolleySim.Phase.POINT)
+func get_state_name() -> String:
+	return "point"
 
 
 func enter(prev_state: FSMState, event_data: Dictionary) -> void:
@@ -24,11 +24,7 @@ func enter(prev_state: FSMState, event_data: Dictionary) -> void:
 	state["point_reason"] = int(event_data["reason"])
 	super(prev_state, event_data)
 	for ball in state["balls"]:
-		ball["frozen"] = true
-		ball["vx"] = 0.0
-		ball["vy"] = 0.0
-		ball["stick"] = 0
-		ball["stick_player"] = -1
+		SimState.freeze_ball(ball)
 
 
 func tick() -> void:

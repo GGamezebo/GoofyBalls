@@ -5,12 +5,12 @@ extends SimPhase
 ## After `serve_delay_ticks` → PLAY.
 
 
-static func get_state() -> String:
-	return SimPhaseStates.SERVE
+func _init(sim: VolleySim) -> void:
+	super(VolleySim.Phase.SERVE, sim)
 
 
-func _init() -> void:
-	super(get_state(), VolleySim.Phase.SERVE)
+func get_state_name() -> String:
+	return "serve"
 
 
 func enter(prev_state: FSMState, event_data: Dictionary) -> void:
@@ -18,8 +18,7 @@ func enter(prev_state: FSMState, event_data: Dictionary) -> void:
 	var sim := _sim()
 	var state := sim.state
 	var arena: Dictionary = sim.cfg["arena"]
-	state["touch_team"] = -1
-	state["touch_count"] = 0
+	SimState.reset_touches(state)
 
 	var radius := sim.param("blob_radius")
 	var players: Array = state["players"]

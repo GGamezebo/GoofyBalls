@@ -30,7 +30,7 @@ func decide(state: Dictionary, physics: Dictionary, arena: Dictionary) -> Dictio
 	var blob_radius := float(physics["blob_radius"])
 	var ball_radius := float(physics["ball_radius"])
 	var step := profile.axis_smooth * DT
-	if bool(ball["frozen"]) and int(state["phase"]) != 0:
+	if bool(ball["frozen"]) and int(state["phase"]) != VolleySim.Phase.SERVE:
 		_axis = move_toward(_axis, 0.0, step)
 		return {"x": roundi(_axis * 100.0), "j": 0, "a": 0}
 

@@ -22,10 +22,8 @@ signal ev_transport_changed(transport: PeerTransport)
 
 ## Room lifecycle (`core/lib/fsm`): IDLE → CONNECTING → WAITING → IN_MATCH (rematches stay there),
 ## LEAVE from anywhere back to IDLE. Internal to the protocol: the app only sees `ev_*` signals.
-const IDLE := "idle"
-const CONNECTING := "connecting"
-const WAITING := "waiting"
-const IN_MATCH := "in_match"
+enum RoomState { IDLE, CONNECTING, WAITING, IN_MATCH }
+
 const EV_CONNECT := "connect"
 const EV_JOINED := "joined"
 const EV_START := "start"
@@ -80,13 +78,13 @@ var display_name: String = ""
 var _config: OnlineConfig
 var _log: LogChannel
 var _fsm := FSM.new({
-	"initial": {"state": IDLE},
+	"initial": {"state": RoomState.IDLE},
 	"transitions": [
-		{"src": IDLE, "dst": CONNECTING, "event": EV_CONNECT},
-		{"src": CONNECTING, "dst": WAITING, "event": EV_JOINED},
+		{"src": RoomState.IDLE, "dst": RoomState.CONNECTING, "event": EV_CONNECT},
+		{"src": RoomState.CONNECTING, "dst": RoomState.WAITING, "event": EV_JOINED},
 		# A guest can get the host's start while its own join is still settling.
-		{"src": [CONNECTING, WAITING, IN_MATCH], "dst": IN_MATCH, "event": EV_START},
-		{"src": FSM.ALL_STATES, "dst": IDLE, "event": EV_LEAVE},
+		{"src": [RoomState.CONNECTING, RoomState.WAITING, RoomState.IN_MATCH], "dst": RoomState.IN_MATCH, "event": EV_START},
+		{"src": FSM.ALL_STATES, "dst": RoomState.IDLE, "event": EV_LEAVE},
 	],
 })
 var _socket: NakamaSocket
@@ -115,31 +113,40 @@ func _process(delta: float) -> void:
 		_p2p_wait_left = -1.0
 		if not linked:
 			_log.warn("p2p_timeout", {"state": _transport.connection_state() if _transport != null else "none"})
-		if _is(WAITING) and multiplayer.is_server() and _opponent_peer != 0:
+		if _is(RoomState.WAITING) and multiplayer.is_server() and _opponent_peer != 0:
 			_start_round()
 
 
 func setup(config: OnlineConfig, log_channel: LogChannel) -> void:
 	_config = config
 	_log = log_channel
-	_fsm.ev_state_changed.connect(func(from: String, to: String) -> void:
-		_log.info("room_state", {"from": from, "to": to}))
+	_fsm.ev_state_changed.connect(func(from: int, to: int) -> void:
+		_log.info("room_state", {"from": _room_state_name(from), "to": _room_state_name(to)}))
 	_profile = _cmdline_profile()
 	client.setup(nakama_node, config)
 	var device := OnlineClient.device_id(_profile)
 	display_name = "Игрок %s" % device.right(4).to_upper()
 
 
-func _is(state_name: String) -> bool:
-	return _fsm.get_current_state_name() == state_name
+func _is(state: RoomState) -> bool:
+	return _fsm.get_current_state_id() == state
+
+
+func _state_name() -> String:
+	return _room_state_name(_fsm.get_current_state_id())
+
+
+## RoomFlow passes no state objects (the FSM creates plain ones), so it names its enum itself.
+static func _room_state_name(state: int) -> String:
+	return RoomState.keys()[state].to_lower() if state >= 0 and state < RoomState.size() else str(state)
 
 
 func is_idle() -> bool:
-	return _is(IDLE)
+	return _is(RoomState.IDLE)
 
 
 func create_room() -> void:
-	if not _is(IDLE):
+	if not _is(RoomState.IDLE):
 		return
 	_fsm.add_event(EV_CONNECT)
 	_log.info("room_create_requested", {"server": _config.address()})
@@ -147,7 +154,7 @@ func create_room() -> void:
 		return
 	ev_status.emit(RoomStatus.CREATING_ROOM)
 	var result := await client.rpc_async("room_create", {})
-	if not _is(CONNECTING):
+	if not _is(RoomState.CONNECTING):
 		return
 	if not bool(result.get("ok", false)):
 		_fail("room_create_failed", RoomError.CREATE_FAILED, {"error": client.last_error})
@@ -156,19 +163,19 @@ func create_room() -> void:
 	_base_seed = int(result.get("seed", randi()))
 	_log.info("room_created", {"code": _code})
 	ev_room_created.emit(_code)
-	if await _join_match(str(result["match_name"])) and _is(CONNECTING):
+	if await _join_match(str(result["match_name"])) and _is(RoomState.CONNECTING):
 		_fsm.add_event(EV_JOINED)
 
 
 func join_room(code: String) -> void:
-	if not _is(IDLE):
+	if not _is(RoomState.IDLE):
 		return
 	_fsm.add_event(EV_CONNECT)
 	_log.info("room_join_requested", {"code": code, "server": _config.address()})
 	if not await _connect():
 		return
 	var result := await client.rpc_async("room_join", {"code": code})
-	if not _is(CONNECTING):
+	if not _is(RoomState.CONNECTING):
 		return
 	if not bool(result.get("ok", false)):
 		var error := str(result.get("error", client.last_error))
@@ -177,12 +184,12 @@ func join_room(code: String) -> void:
 	_code = code
 	_base_seed = int(result.get("seed", 0))
 	ev_status.emit(RoomStatus.JOINING_FRIEND)
-	if await _join_match(str(result["match_name"])) and _is(CONNECTING):
+	if await _join_match(str(result["match_name"])) and _is(RoomState.CONNECTING):
 		_fsm.add_event(EV_JOINED)
 
 
 func request_rematch() -> void:
-	if not _is(IN_MATCH) or _opponent_peer == 0:
+	if not _is(RoomState.IN_MATCH) or _opponent_peer == 0:
 		ev_rematch_status.emit(RematchStatus.OPPONENT_GONE)
 		return
 	_rematch[multiplayer.get_unique_id()] = true
@@ -196,9 +203,9 @@ func request_rematch() -> void:
 ## may wait on the server here. Closing the socket is enough — Nakama drops our presence from
 ## the relayed match and the other peer gets `peer_disconnected`.
 func leave() -> void:
-	if _is(IDLE) and _socket == null:
+	if _is(RoomState.IDLE) and _socket == null:
 		return
-	_log.info("room_leave", {"code": _code, "state": _fsm.get_current_state_name()})
+	_log.info("room_leave", {"code": _code, "state": _state_name()})
 	_fsm.add_event(EV_LEAVE)
 	_opponent_peer = 0
 	_names.clear()
@@ -223,7 +230,7 @@ func _connect() -> bool:
 	if not await client.sign_in_async(_profile):
 		_fail("sign_in_failed", RoomError.NO_SERVER, {"error": client.last_error, "server": _config.address()})
 		return false
-	if not _is(CONNECTING):
+	if not _is(RoomState.CONNECTING):
 		return false
 	_log.info("signed_in", {"user": client.session.user_id})
 	_socket = nakama_node.create_socket_from(client.nakama)
@@ -285,22 +292,22 @@ func _on_peer_connected(peer_id: int) -> void:
 func _on_peer_disconnected(peer_id: int) -> void:
 	if peer_id != _opponent_peer:
 		return
-	_log.warn("opponent_left", {"peer": peer_id, "state": _fsm.get_current_state_name()})
+	_log.warn("opponent_left", {"peer": peer_id, "state": _state_name()})
 	_opponent_peer = 0
 	_p2p_wait_left = -1.0
 	_close_transport()
 	ev_opponent_left.emit()
-	if _is(WAITING) and multiplayer.is_server():
+	if _is(RoomState.WAITING) and multiplayer.is_server():
 		ev_status.emit(RoomStatus.FRIEND_LEFT)
-	elif _is(IN_MATCH):
+	elif _is(RoomState.IN_MATCH):
 		leave()
 
 
 func _on_socket_closed() -> void:
-	if _is(IDLE):
+	if _is(RoomState.IDLE):
 		return
-	_log.warn("socket_closed", {"state": _fsm.get_current_state_name()})
-	var was_in_match := _is(IN_MATCH)
+	_log.warn("socket_closed", {"state": _state_name()})
+	var was_in_match := _is(RoomState.IN_MATCH)
 	if was_in_match:
 		ev_opponent_left.emit()
 	leave()
@@ -339,7 +346,7 @@ func _rpc_hello(peer_name: String) -> void:
 		return
 	_names[sender] = peer_name.left(_config.max_name_length)
 	_log.info("hello", {"peer": sender})
-	if multiplayer.is_server() and _is(WAITING):
+	if multiplayer.is_server() and _is(RoomState.WAITING):
 		_begin_p2p()
 
 

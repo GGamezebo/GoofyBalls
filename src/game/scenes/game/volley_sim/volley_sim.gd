@@ -21,8 +21,6 @@ var cfg: Dictionary = {}
 var state: Dictionary = {}
 
 var _fsm: FSM
-## Indexed by `Phase`.
-var _phases: Array[SimPhase] = []
 
 
 static func neutral_input() -> Dictionary:
@@ -41,14 +39,14 @@ func reset(config: Dictionary) -> void:
 	var nets: Array = []
 	for team in teams:
 		var x_min := -half_width + zone_width * float(team)
-		zones.append({"team": team, "x_min": x_min, "x_max": x_min + zone_width})
+		zones.append(SimState.new_zone(team, x_min, x_min + zone_width))
 		if team > 0:
-			nets.append({"x": x_min, "half_w": float(arena["net_half_width"]), "top": float(arena["net_height"])})
+			nets.append(SimState.new_net(x_min, float(arena["net_half_width"]), float(arena["net_height"])))
 
 	var players: Array = []
 	for team in teams:
 		for _k in int(team_sizes[team]):
-			players.append({"team": team, "x": 0.0, "y": param("blob_radius"), "vx": 0.0, "vy": 0.0, "jh": 0, "cling": 0})
+			players.append(SimState.new_player(team, param("blob_radius")))
 
 	var scores: Array = []
 	for _team in teams:
@@ -57,26 +55,7 @@ func reset(config: Dictionary) -> void:
 	var rng := int(cfg["seed"]) & 0xFFFFFFFF
 	if rng == 0:
 		rng = 0x9E3779B9
-	state = {
-		"tick": 0,
-		"phase": Phase.SERVE,
-		"phase_ticks": 0,
-		"rng": rng,
-		"scores": scores,
-		"serving_team": 0,
-		"winner_team": -1,
-		"touch_team": -1,
-		"touch_count": 0,
-		"zones": zones,
-		"nets": nets,
-		"players": players,
-		"balls": [_new_ball()],
-		"touch_serial": 0,
-		"touch_player": -1,
-		"point_serial": 0,
-		"point_team": -1,
-		"point_reason": Reason.NONE,
-	}
+	state = SimState.new_state(rng, scores, zones, nets, players)
 	state["serving_team"] = _next_random() % teams
 	_build_phases() # enters SERVE
 
@@ -114,10 +93,10 @@ func step(inputs: Array) -> void:
 		_step_player(players[i], input)
 
 	# The state may come from `load_state` (rollback) or be edited directly: follow it.
-	var phase := _phases[int(state["phase"])]
-	if _fsm.get_current_state_name() != phase.state_name:
-		_fsm.restore_state(phase.state_name)
-	phase.tick()
+	var phase := int(state["phase"])
+	if _fsm.get_current_state_id() != phase:
+		_fsm.restore_state(phase)
+	(_fsm.get_current_state() as SimPhase).tick()
 
 
 ## Physics value for `target` (player / ball dict). Iteration 1: the preset value; buffs will
@@ -228,32 +207,20 @@ func _step_player(player: Dictionary, input: Dictionary) -> void:
 func _build_phases() -> void:
 	if _fsm:
 		_fsm.deinit()
-	_phases = [ServePhase.new(), PlayPhase.new(), PointPhase.new(), MatchEndPhase.new()]
-	for i in _phases.size():
-		assert(_phases[i].phase == i, "phase list must follow VolleySim.Phase")
-		_phases[i].initialize(self)
 	_fsm = FSM.new({
-		"initial": {"state": ServePhase.get_state()},
+		"initial": {"state": Phase.SERVE},
 		"transitions": [
-			{"src": ServePhase.get_state(), "dst": PlayPhase.get_state(), "event": SimPhaseEvents.SERVE_DONE},
-			{"src": PlayPhase.get_state(), "dst": PointPhase.get_state(), "event": SimPhaseEvents.RALLY_LOST},
-			{"src": PointPhase.get_state(), "dst": ServePhase.get_state(), "event": SimPhaseEvents.NEXT_SERVE},
-			{"src": PointPhase.get_state(), "dst": MatchEndPhase.get_state(), "event": SimPhaseEvents.MATCH_WON},
+			{"src": Phase.SERVE, "dst": Phase.PLAY, "event": SimPhaseEvents.SERVE_DONE},
+			{"src": Phase.PLAY, "dst": Phase.POINT, "event": SimPhaseEvents.RALLY_LOST},
+			{"src": Phase.POINT, "dst": Phase.SERVE, "event": SimPhaseEvents.NEXT_SERVE},
+			{"src": Phase.POINT, "dst": Phase.MATCH_END, "event": SimPhaseEvents.MATCH_WON},
 		],
-		"states": _phases,
-		"final": MatchEndPhase.get_state(),
+		"states": [ServePhase.new(self), PlayPhase.new(self), PointPhase.new(self), MatchEndPhase.new(self)],
+		"final": Phase.MATCH_END,
 	})
 
 
 # --- helpers ---------------------------------------------------------------------------
-
-static func _new_ball() -> Dictionary:
-	return {
-		"x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "frozen": true, "last_toucher": -1, "cooldown": 0,
-		"stick": 0, "stick_player": -1, "stick_dx": 0.0, "stick_dy": 0.0,
-		"impact_serial": 0, "impact_nx": 0.0, "impact_ny": 0.0, "impact_power": 0.0,
-	}
-
 
 ## xorshift32 on the int stored in the state.
 func _next_random() -> int:

@@ -6,23 +6,13 @@ extends FSMState
 ##   The sim re-syncs the FSM from `state["phase"]` every tick (`FSM.restore_state`).
 ## - `enter` writes the phase into the state; `tick` runs once per sim tick while active.
 ## - Holds the sim weakly (the sim owns the FSM, the FSM owns the phases).
-
-## `VolleySim.Phase` this state stands for (index in the sim's phase list).
-var phase: int
+## - `state_id` is the `VolleySim.Phase` it stands for: the same int that `state["phase"]` stores.
 
 var _sim_ref: WeakRef
 
 
-static func get_state() -> String:
-	return ""
-
-
-func _init(p_state_name: String, p_phase: int) -> void:
-	super(p_state_name)
-	phase = p_phase
-
-
-func initialize(sim: VolleySim) -> void:
+func _init(p_phase: VolleySim.Phase, sim: VolleySim) -> void:
+	super(p_phase)
 	_sim_ref = weakref(sim)
 
 
@@ -32,7 +22,7 @@ func deinit() -> void:
 
 func enter(_prev_state: FSMState, _event_data: Dictionary) -> void:
 	var state: Dictionary = _sim().state
-	state["phase"] = phase
+	state["phase"] = state_id
 	state["phase_ticks"] = 0
 
 

@@ -4,12 +4,12 @@ extends SimPhase
 ## Final phase: the winner is set, the sim keeps ticking (blobs still move) until the scene leaves.
 
 
-static func get_state() -> String:
-	return SimPhaseStates.MATCH_END
+func _init(sim: VolleySim) -> void:
+	super(VolleySim.Phase.MATCH_END, sim)
 
 
-func _init() -> void:
-	super(get_state(), VolleySim.Phase.MATCH_END)
+func get_state_name() -> String:
+	return "match_end"
 
 
 func enter(prev_state: FSMState, event_data: Dictionary) -> void:

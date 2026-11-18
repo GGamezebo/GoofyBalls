@@ -9,12 +9,12 @@ extends SimPhase
 ## driven by `impact_serial` + `impact_nx/ny` (direction the ball was pushed) + `impact_power`.
 
 
-static func get_state() -> String:
-	return SimPhaseStates.PLAY
+func _init(sim: VolleySim) -> void:
+	super(VolleySim.Phase.PLAY, sim)
 
 
-func _init() -> void:
-	super(get_state(), VolleySim.Phase.PLAY)
+func get_state_name() -> String:
+	return "play"
 
 
 func enter(prev_state: FSMState, event_data: Dictionary) -> void:
