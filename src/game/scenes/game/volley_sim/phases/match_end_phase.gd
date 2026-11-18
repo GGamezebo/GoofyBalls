@@ -14,7 +14,7 @@ func get_state_name() -> String:
 
 func enter(prev_state: FSMState, event_data: Dictionary) -> void:
 	super(prev_state, event_data)
-	_sim().state["winner_team"] = int(event_data["winner_team"])
+	_sim().state.winner_team = int(event_data["winner_team"])
 
 
 func tick() -> void:

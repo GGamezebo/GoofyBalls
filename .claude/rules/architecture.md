@@ -1,7 +1,7 @@
 # Architecture (always) — same as quizmatik
 Reference implementation: `D:\Godot\MyProjects\quizmatik` (`GGamezebo/quizmatik`), rules in its `.claude/rules/godot-paradigm.md` + `architecture.md`. In doubt → copy its pattern; never invent a parallel system.
 Layers (code split by layer; deps point down only):
-- `src/game/` HFSM bootstrap, contexts, scenes (orchestration + the context's own rules/FSM, e.g. `game/volley_sim`, like quizmatik `game_logic`; features never import it, they get its `state`/`cfg` as data) → `src/features/` isolated features / `src/entities/` entities built from `src/entities/components/` (`entities.md`) → `src/ui/`, `src/common/` shared game widgets/Resources → `core/` project-agnostic libs (never import `src/`).
+- `src/game/` HFSM bootstrap, contexts, scenes (orchestration + the context's own rules/FSM, e.g. `game/volley_sim`, like quizmatik `game_logic`; features never call it, they read its typed `SimState` and `cfg` as read-only data) → `src/features/` isolated features / `src/entities/` entities built from `src/entities/components/` (`entities.md`) → `src/ui/`, `src/common/` shared game widgets/Resources → `core/` project-agnostic libs (never import `src/`).
 HFSM:
 - HFSM creates states, mounts their scenes, drives all transitions between app phases/scenes.
 - Each large context = own HFSM state + scene: phases, platforms, onboarding/tutorial, server-driven features. Host scenes expose only passive hooks (Resource `ev_*`).

@@ -38,7 +38,7 @@ func test_late_remote_input_rolls_back_to_identical_state() -> void:
 		func(_slot: int) -> Dictionary: return VolleySim.neutral_input(),
 		func(inputs: Array) -> int:
 			live.step(inputs)
-			return int(live.state["tick"]),
+			return live.state.tick,
 		live.save_state, live.load_state, VolleySim.neutral_input())
 	var slot_peers: Array[int] = [1, 2]
 	session.bind_inputs(slot_peers, 1)

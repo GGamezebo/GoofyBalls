@@ -3,10 +3,10 @@ extends FSMState
 
 ## Base of a match phase inside `VolleySim` (FSM from `core/lib/fsm`).
 ## - Keeps no runtime fields: everything lives in `sim.state`, so save / load / rollback just work.
-##   The sim re-syncs the FSM from `state["phase"]` every tick (`FSM.restore_state`).
+##   The sim re-syncs the FSM from `state.phase` every tick (`FSM.restore_state`).
 ## - `enter` writes the phase into the state; `tick` runs once per sim tick while active.
 ## - Holds the sim weakly (the sim owns the FSM, the FSM owns the phases).
-## - `state_id` is the `VolleySim.Phase` it stands for: the same int that `state["phase"]` stores.
+## - `state_id` is the `VolleySim.Phase` it stands for: the same value as `state.phase`.
 
 var _sim_ref: WeakRef
 
@@ -21,9 +21,9 @@ func deinit() -> void:
 
 
 func enter(_prev_state: FSMState, _event_data: Dictionary) -> void:
-	var state: Dictionary = _sim().state
-	state["phase"] = state_id
-	state["phase_ticks"] = 0
+	var state := _sim().state
+	state.phase = state_id as VolleySim.Phase
+	state.phase_ticks = 0
 
 
 ## One sim tick while this phase is active (players have already moved).
@@ -36,7 +36,6 @@ func _sim() -> VolleySim:
 
 
 ## Counts ticks spent in this phase; returns the new count.
-func _count_tick(state: Dictionary) -> int:
-	var ticks := int(state["phase_ticks"]) + 1
-	state["phase_ticks"] = ticks
-	return ticks
+func _count_tick(state: SimState) -> int:
+	state.phase_ticks += 1
+	return state.phase_ticks

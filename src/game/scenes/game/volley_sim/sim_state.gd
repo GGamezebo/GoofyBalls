@@ -1,69 +1,117 @@
 class_name SimState
 extends RefCounted
 
-## Builders of the sim's plain-Dictionary state: one place for every key and its start value.
-## The state stays a Dictionary (save / load / hash, `sim.md`); these are only factories.
-## Key order is part of `VolleySim.state_hash()` (determinism golden hash): add new keys at the end.
+## Whole match state of `VolleySim`: typed fields, changed only by the sim and its phases;
+## views, the bot and the game scene read it.
+## Rollback / save / hash use `to_dict()` / `from_dict()`: the snapshot is a plain Dictionary
+## (SyncManager stores and hashes it). Its keys, order and value types are part of the
+## determinism golden hash (`DeterminismProbe`): a new field goes at the end of `to_dict()`.
+
+var tick: int = 0
+var phase: VolleySim.Phase = VolleySim.Phase.SERVE
+var phase_ticks: int = 0
+## xorshift32 state (`VolleySim._next_random`).
+var rng: int = 0
+## Points per team.
+var scores: Array[int] = []
+var serving_team: int = 0
+var winner_team: int = -1
+## Team that touched the ball last in this rally and how many times in a row (-1 = nobody yet).
+var touch_team: int = -1
+var touch_count: int = 0
+## Set once per match: one zone per team, a net between neighbours.
+var zones: Array[SimZone] = []
+var nets: Array[SimNet] = []
+var players: Array[SimPlayer] = []
+var balls: Array[SimBall] = []
+## View events: counters bump when something happens, the view edge-detects them.
+var touch_serial: int = 0
+var touch_player: int = -1
+var point_serial: int = 0
+var point_team: int = -1
+var point_reason: VolleySim.Reason = VolleySim.Reason.NONE
 
 
-## Whole match state at tick 0 (phase SERVE, no score).
-static func new_state(rng: int, scores: Array, zones: Array, nets: Array, players: Array) -> Dictionary:
+## Tick 0, phase SERVE, no score, one frozen ball.
+static func create(p_rng: int, p_scores: Array[int], p_zones: Array[SimZone], p_nets: Array[SimNet], p_players: Array[SimPlayer]) -> SimState:
+	var state := SimState.new()
+	state.rng = p_rng
+	state.scores = p_scores
+	state.zones = p_zones
+	state.nets = p_nets
+	state.players = p_players
+	state.balls = [SimBall.new()]
+	return state
+
+
+## New rally: nobody has touched the ball yet.
+func reset_touches() -> void:
+	touch_team = -1
+	touch_count = 0
+
+
+## Snapshot form (rollback / hash): same keys, order and types as the old Dictionary state.
+func to_dict() -> Dictionary:
+	var score_list: Array = []
+	for score in scores:
+		score_list.append(score)
+	var zone_list: Array = []
+	for zone in zones:
+		zone_list.append(zone.to_dict())
+	var net_list: Array = []
+	for net in nets:
+		net_list.append(net.to_dict())
+	var player_list: Array = []
+	for player in players:
+		player_list.append(player.to_dict())
+	var ball_list: Array = []
+	for ball in balls:
+		ball_list.append(ball.to_dict())
 	return {
-		"tick": 0,
-		"phase": VolleySim.Phase.SERVE,
-		"phase_ticks": 0,
+		"tick": tick,
+		"phase": phase,
+		"phase_ticks": phase_ticks,
 		"rng": rng,
-		"scores": scores,
-		"serving_team": 0,
-		"winner_team": -1,
-		"touch_team": -1,
-		"touch_count": 0,
-		"zones": zones,
-		"nets": nets,
-		"players": players,
-		"balls": [new_ball()],
-		"touch_serial": 0,
-		"touch_player": -1,
-		"point_serial": 0,
-		"point_team": -1,
-		"point_reason": VolleySim.Reason.NONE,
+		"scores": score_list,
+		"serving_team": serving_team,
+		"winner_team": winner_team,
+		"touch_team": touch_team,
+		"touch_count": touch_count,
+		"zones": zone_list,
+		"nets": net_list,
+		"players": player_list,
+		"balls": ball_list,
+		"touch_serial": touch_serial,
+		"touch_player": touch_player,
+		"point_serial": point_serial,
+		"point_team": point_team,
+		"point_reason": point_reason,
 	}
 
 
-## Court part owned by `team`, from `x_min` to `x_max` (m).
-static func new_zone(team: int, x_min: float, x_max: float) -> Dictionary:
-	return {"team": team, "x_min": x_min, "x_max": x_max}
-
-
-## Net at `x` between two zones (m).
-static func new_net(x: float, half_width: float, top: float) -> Dictionary:
-	return {"x": x, "half_w": half_width, "top": top}
-
-
-## Player standing still at height `y` (m); the serve phase lines players up.
-static func new_player(team: int, y: float) -> Dictionary:
-	return {"team": team, "x": 0.0, "y": y, "vx": 0.0, "vy": 0.0, "jh": 0, "cling": 0}
-
-
-## Frozen ball at the origin; the serve phase places it.
-static func new_ball() -> Dictionary:
-	return {
-		"x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "frozen": true, "last_toucher": -1, "cooldown": 0,
-		"stick": 0, "stick_player": -1, "stick_dx": 0.0, "stick_dy": 0.0,
-		"impact_serial": 0, "impact_nx": 0.0, "impact_ny": 0.0, "impact_power": 0.0,
-	}
-
-
-## New rally: nobody has touched the ball yet (same values as `new_state`).
-static func reset_touches(state: Dictionary) -> void:
-	state["touch_team"] = -1
-	state["touch_count"] = 0
-
-
-## Rally over: the ball hangs still and lets go of any blob (same values as `new_ball`).
-static func freeze_ball(ball: Dictionary) -> void:
-	ball["frozen"] = true
-	ball["vx"] = 0.0
-	ball["vy"] = 0.0
-	ball["stick"] = 0
-	ball["stick_player"] = -1
+static func from_dict(d: Dictionary) -> SimState:
+	var state := SimState.new()
+	state.tick = d["tick"]
+	state.phase = int(d["phase"]) as VolleySim.Phase
+	state.phase_ticks = d["phase_ticks"]
+	state.rng = d["rng"]
+	for score in d["scores"]:
+		state.scores.append(score)
+	state.serving_team = d["serving_team"]
+	state.winner_team = d["winner_team"]
+	state.touch_team = d["touch_team"]
+	state.touch_count = d["touch_count"]
+	for zone in d["zones"]:
+		state.zones.append(SimZone.from_dict(zone))
+	for net in d["nets"]:
+		state.nets.append(SimNet.from_dict(net))
+	for player in d["players"]:
+		state.players.append(SimPlayer.from_dict(player))
+	for ball in d["balls"]:
+		state.balls.append(SimBall.from_dict(ball))
+	state.touch_serial = d["touch_serial"]
+	state.touch_player = d["touch_player"]
+	state.point_serial = d["point_serial"]
+	state.point_team = d["point_team"]
+	state.point_reason = int(d["point_reason"]) as VolleySim.Reason
+	return state

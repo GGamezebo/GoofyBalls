@@ -26,8 +26,8 @@ func run() -> Dictionary:
 		"hash": value,
 		"expected": expected_hash,
 		"ok": value == expected_hash,
-		"tick": int(sim.state["tick"]),
-		"scores": (sim.state["scores"] as Array).duplicate(),
+		"tick": sim.state.tick,
+		"scores": sim.state.scores.duplicate(),
 	}
 
 

@@ -16,15 +16,14 @@ func get_state_name() -> String:
 func enter(prev_state: FSMState, event_data: Dictionary) -> void:
 	var state := _sim().state
 	var scoring_team := TwoTeamPoints.rally_winner(int(event_data["losing_team"]))
-	var scores: Array = state["scores"]
-	scores[scoring_team] = int(scores[scoring_team]) + 1
-	state["serving_team"] = scoring_team
-	state["point_serial"] = int(state["point_serial"]) + 1
-	state["point_team"] = scoring_team
-	state["point_reason"] = int(event_data["reason"])
+	state.scores[scoring_team] += 1
+	state.serving_team = scoring_team
+	state.point_serial += 1
+	state.point_team = scoring_team
+	state.point_reason = int(event_data["reason"]) as VolleySim.Reason
 	super(prev_state, event_data)
-	for ball in state["balls"]:
-		SimState.freeze_ball(ball)
+	for ball in state.balls:
+		ball.freeze()
 
 
 func tick() -> void:
@@ -33,7 +32,7 @@ func tick() -> void:
 	var rules: Dictionary = sim.cfg["rules"]
 	if _count_tick(state) < int(rules["point_pause_ticks"]):
 		return
-	var winner := TwoTeamPoints.match_winner(state["scores"], int(rules["win_score"]))
+	var winner := TwoTeamPoints.match_winner(state.scores, int(rules["win_score"]))
 	if winner >= 0:
 		add_event(SimPhaseEvents.MATCH_WON, {"winner_team": winner})
 	else:

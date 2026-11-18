@@ -10,8 +10,8 @@ static func rally_winner(losing_team: int) -> int:
 
 
 ## Winning team index, or -1 while nobody has reached `win_score`.
-static func match_winner(scores: Array, win_score: int) -> int:
+static func match_winner(scores: Array[int], win_score: int) -> int:
 	for team in scores.size():
-		if int(scores[team]) >= win_score:
+		if scores[team] >= win_score:
 			return team
 	return -1

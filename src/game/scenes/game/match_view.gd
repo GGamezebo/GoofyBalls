@@ -64,40 +64,39 @@ func setup(sim: VolleySim, match_setup: MatchSetup, local_slots: Array[int]) -> 
 	_correction_pending = false
 	_layout()
 	for i in _blobs.size():
-		var team := int(sim.state["players"][i]["team"])
+		var team := sim.state.players[i].team
 		var display_name := slots[i].display_name if i < slots.size() else ""
 		_blobs[i].setup(palette.color(team), sim.param("blob_radius") * px_per_m, display_name, local_slots.has(i))
 	ball_view.setup(sim.param("ball_radius") * px_per_m)
-	_seen_touch = int(sim.state["touch_serial"])
-	_seen_point = int(sim.state["point_serial"])
-	_seen_impact = int(sim.state["balls"][0]["impact_serial"])
-	capture(int(sim.state["tick"]))
+	_seen_touch = sim.state.touch_serial
+	_seen_point = sim.state.point_serial
+	_seen_impact = sim.state.balls[0].impact_serial
+	capture(sim.state.tick)
 	if not get_viewport().size_changed.is_connected(_on_viewport_resized):
 		get_viewport().size_changed.connect(_on_viewport_resized)
 
 
 func capture(tick: int) -> void:
-	var state: Dictionary = _sim.state
-	var players: Array = state["players"]
+	var state := _sim.state
 	var p := PackedVector2Array()
 	var vy := PackedFloat32Array()
 	var vx := PackedFloat32Array()
 	var cling := PackedInt32Array()
-	for player in players:
-		p.append(Vector2(float(player["x"]), float(player["y"])))
-		vy.append(float(player["vy"]))
-		vx.append(float(player["vx"]))
-		cling.append(int(player["cling"]))
-	var ball: Dictionary = state["balls"][0]
+	for player in state.players:
+		p.append(Vector2(player.x, player.y))
+		vy.append(player.vy)
+		vx.append(player.vx)
+		cling.append(player.cling)
+	var ball := state.balls[0]
 	# A ball stuck to a blob rides it: no flight velocity, pressed flat on the blob side.
-	var ball_v := Vector2(float(ball["vx"]), float(ball["vy"]))
+	var ball_v := Vector2(ball.vx, ball.vy)
 	var press := Vector2.ZERO
-	if int(ball["stick"]) > 0:
+	if ball.stick > 0:
 		ball_v = Vector2.ZERO
-		press = Vector2(float(ball["stick_dx"]), -float(ball["stick_dy"])).normalized()
+		press = Vector2(ball.stick_dx, -ball.stick_dy).normalized()
 	_ring[tick % RING] = {
 		"tick": tick, "serve": _serve_number(state), "p": p, "vy": vy, "vx": vx, "cl": cling,
-		"b": Vector2(float(ball["x"]), float(ball["y"])), "bv": ball_v, "bp": press, "bf": bool(ball["frozen"]),
+		"b": Vector2(ball.x, ball.y), "bv": ball_v, "bp": press, "bf": ball.frozen,
 	}
 	_latest = tick
 
@@ -160,23 +159,21 @@ func _apply_correction() -> void:
 
 
 func _update_fx() -> void:
-	var touch_serial := int(_sim.state["touch_serial"])
+	var state := _sim.state
+	var touch_serial := state.touch_serial
 	if touch_serial > _seen_touch:
-		var player := int(_sim.state["touch_player"])
+		var player := state.touch_player
 		if player >= 0 and player < _blobs.size():
 			_blobs[player].pulse(ball_view.global_position - _blobs[player].global_position)
 	_seen_touch = touch_serial
-	var point_serial := int(_sim.state["point_serial"])
+	var ball := state.balls[0]
+	var point_serial := state.point_serial
 	if point_serial > _seen_point:
-		var ball: Dictionary = _sim.state["balls"][0]
-		var team := int(_sim.state["point_team"])
-		court_view.flash_zone(_sim.zone_of(float(ball["x"])), palette.color(team))
+		court_view.flash_zone(_sim.zone_of(ball.x), palette.color(state.point_team))
 	_seen_point = point_serial
-	var ball_state: Dictionary = _sim.state["balls"][0]
-	var impact_serial := int(ball_state["impact_serial"])
+	var impact_serial := ball.impact_serial
 	if impact_serial > _seen_impact:
-		var push := Vector2(float(ball_state["impact_nx"]), -float(ball_state["impact_ny"]))
-		ball_view.impact(push, float(ball_state["impact_power"]))
+		ball_view.impact(Vector2(ball.impact_nx, -ball.impact_ny), ball.impact_power)
 	_seen_impact = impact_serial
 
 
@@ -190,15 +187,15 @@ func _layout() -> void:
 	origin = Vector2(view.x * 0.5, floor_y)
 	var court := Rect2(origin.x - half_width * px_per_m, floor_y - ceiling * px_per_m, 2.0 * half_width * px_per_m, ceiling * px_per_m)
 	var nets: Array[Dictionary] = []
-	for net in _sim.state["nets"]:
+	for net in _sim.state.nets:
 		nets.append({
-			"x": to_px(Vector2(float(net["x"]), 0.0)).x,
-			"top": floor_y - float(net["top"]) * px_per_m,
-			"w": 2.0 * float(net["half_w"]) * px_per_m,
+			"x": to_px(Vector2(net.x, 0.0)).x,
+			"top": floor_y - net.top * px_per_m,
+			"w": 2.0 * net.half_w * px_per_m,
 		})
 	var zones: Array[Dictionary] = []
-	for zone in _sim.state["zones"]:
-		zones.append({"x_min": to_px(Vector2(float(zone["x_min"]), 0.0)).x, "x_max": to_px(Vector2(float(zone["x_max"]), 0.0)).x})
+	for zone in _sim.state.zones:
+		zones.append({"x_min": to_px(Vector2(zone.x_min, 0.0)).x, "x_max": to_px(Vector2(zone.x_max, 0.0)).x})
 	court_view.setup(court, nets, zones)
 
 
@@ -218,7 +215,6 @@ static func _lerp_m(a: Vector2, b: Vector2, t: float) -> Vector2:
 
 
 ## Counts serves begun: changes exactly when ball and blobs are reset to serve places.
-static func _serve_number(state: Dictionary) -> int:
-	var phase := int(state["phase"])
-	var serving := phase == VolleySim.Phase.SERVE or phase == VolleySim.Phase.PLAY
-	return int(state["point_serial"]) + (1 if serving else 0)
+static func _serve_number(state: SimState) -> int:
+	var serving := state.phase == VolleySim.Phase.SERVE or state.phase == VolleySim.Phase.PLAY
+	return state.point_serial + (1 if serving else 0)

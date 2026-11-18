@@ -99,14 +99,14 @@ func deinit() -> void:
 
 func _step(inputs: Array) -> int:
 	_sim.step(inputs)
-	return int(_sim.state["tick"])
+	return _sim.state.tick
 
 
 func _process(_delta: float) -> void:
 	if _session == null or _finished:
 		return
 	_gate.release(_session.confirmed_tick())
-	if _gate.is_over_confirmed() and int(_sim.state["phase_ticks"]) >= end_linger_ticks:
+	if _gate.is_over_confirmed() and _sim.state.phase_ticks >= end_linger_ticks:
 		_finish(false, MatchSession.AbortReason.NONE)
 
 
@@ -119,7 +119,7 @@ func _on_rolled_back(_ticks: int) -> void:
 	match_view.on_rolled_back()
 	var undone := _gate.on_rolled_back()
 	if undone > 0:
-		_log.debug("point_rolled_back", {"count": undone, "tick": int(_sim.state["tick"])})
+		_log.debug("point_rolled_back", {"count": undone, "tick": _sim.state.tick})
 
 
 func _on_point_confirmed(team: int, reason: int, scores: Array, tick: int) -> void:
@@ -156,7 +156,7 @@ func _on_session_aborted(reason: MatchSession.AbortReason) -> void:
 func _abort(reason: MatchSession.AbortReason) -> void:
 	if _finished:
 		return
-	_log.warn("match_abort", {"reason": MatchSession.abort_reason_name(reason), "tick": int(_sim.state["tick"])})
+	_log.warn("match_abort", {"reason": MatchSession.abort_reason_name(reason), "tick": _sim.state.tick})
 	game_events.ev_status.emit(MatchSession.abort_reason_text(reason))
 	_finished = true
 	_session.shutdown()
@@ -171,7 +171,7 @@ func _finish(aborted: bool, reason: MatchSession.AbortReason) -> void:
 	_session.shutdown()
 	var result := _build_result(aborted, reason)
 	_log.info("match_end", {"winner": result["winner_team"], "score": ":".join(result["scores"].map(func(v): return str(v))),
-		"ticks": int(_sim.state["tick"])})
+		"ticks": _sim.state.tick})
 	root_events.ev_exit_game.emit(result)
 
 
@@ -179,7 +179,7 @@ func _on_exit_requested() -> void:
 	if _finished:
 		return
 	_finished = true
-	_log.info("match_exit_by_player", {"tick": int(_sim.state["tick"])})
+	_log.info("match_exit_by_player", {"tick": _sim.state.tick})
 	_session.leave()
 	# Back to the menu closes an online room by itself (HFSM App/Online/Room).
 	root_events.ev_return_to_menu.emit({})
@@ -200,8 +200,8 @@ func _on_probe_requested() -> void:
 func _build_result(aborted: bool, reason: MatchSession.AbortReason) -> Dictionary:
 	return {
 		"match_setup": _setup,
-		"scores": (_sim.state["scores"] as Array).duplicate(),
-		"winner_team": int(_sim.state["winner_team"]),
+		"scores": _sim.state.scores.duplicate(),
+		"winner_team": _sim.state.winner_team,
 		"local_teams": _local_teams(_inputs.local_slots()),
 		"team_names": _team_names(),
 		"online": _online,
