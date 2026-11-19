@@ -8,10 +8,16 @@ extends DebugTab
 ##   (a rally never ends on the floor).
 ## - Players: autopilot (a bot plays my slots).
 ## - Match: drop the ball on a team's side (that team loses the rally), restart the match.
+## "Включено" off turns every power off at once (×1, no pause, no hanging ball, no trampoline or
+## autopilot) and keeps the choices for when it is on again; "Сбросить" clears the choices.
 ## Works by wrapping the session's `_sample` / `_step` callables and editing `SimState` between
 ## ticks; `detach` undoes it all. Speed, trampoline and autopilot carry over to the next battle.
 ## Online battles get no such tab: every change would desync the match.
 
+## "Включено" + "Сбросить".
+@export var header: DebugHeader
+## "Включено" when the tab first appears.
+@export var enabled_by_default: bool = true
 @export var speeds: Array[float] = [0.1, 0.25, 0.5, 1.0, 2.0, 3.0]
 ## One button per entry of `speeds`; extra buttons are hidden.
 @export var speed_buttons: Array[Button] = []
@@ -64,6 +70,8 @@ func attach(target: Node, memory: Dictionary) -> void:
 	_memory = memory
 	if not _memory.has("base_ticks"):
 		_memory["base_ticks"] = Engine.physics_ticks_per_second
+	if not _memory.has("enabled"):
+		_memory["enabled"] = enabled_by_default
 	var inputs := target.get("_inputs") as MatchInputs
 	_local_slots = inputs.local_slots() if inputs != null else []
 	var ai_profile := target.get("ai_profile") as AiProfile
@@ -87,9 +95,9 @@ func attach(target: Node, memory: Dictionary) -> void:
 		_listener.add(button.pressed, _drop_ball.bind(team))
 	trampoline_toggle.set_pressed_no_signal(bool(_memory.get("trampoline", false)))
 	autopilot_toggle.set_pressed_no_signal(bool(_memory.get("autopilot", false)))
-	ball_to_me_button.disabled = _local_slots.is_empty()
-	autopilot_toggle.disabled = _local_slots.is_empty()
-	step_button.disabled = true
+	header.set_enabled(_enabled())
+	_listener.add(header.ev_enabled_toggled, _on_enabled_toggled)
+	_listener.add(header.ev_reset_pressed, _on_reset)
 	_listener.add(pause_button.toggled, _set_paused)
 	_listener.add(step_button.pressed, _step_once)
 	_listener.add(ball_to_me_button.pressed, _ball_to_me)
@@ -97,7 +105,8 @@ func attach(target: Node, memory: Dictionary) -> void:
 	_listener.add(trampoline_toggle.toggled, _set_flag.bind("trampoline"))
 	_listener.add(autopilot_toggle.toggled, _set_flag.bind("autopilot"))
 	_listener.add(restart_button.pressed, _restart)
-	_set_speed(float(_memory.get("speed", 1.0)))
+	_apply_speed()
+	_refresh_controls()
 
 
 func detach() -> void:
@@ -116,8 +125,8 @@ func detach() -> void:
 func _process(_delta: float) -> void:
 	if not is_visible_in_tree() or _sim == null:
 		return
-	var parts: Array[String] = ["×%s" % str(_memory.get("speed", 1.0)), "тик %d" % _sim.state.tick,
-		String(VolleySim.Phase.keys()[_sim.state.phase]).to_lower()]
+	var parts: Array[String] = ["×%s" % str(_memory.get("speed", 1.0)) if _enabled() else "выключено",
+		"тик %d" % _sim.state.tick, String(VolleySim.Phase.keys()[_sim.state.phase]).to_lower()]
 	if _paused:
 		parts.append("ПАУЗА")
 	if _hanging:
@@ -125,11 +134,68 @@ func _process(_delta: float) -> void:
 	status_label.text = " · ".join(parts)
 
 
+# --- on / off / reset ------------------------------------------------------------------------
+
+func _enabled() -> bool:
+	return bool(_memory.get("enabled", true))
+
+
+func _on_enabled_toggled(on: bool) -> void:
+	_memory["enabled"] = on
+	if not on:
+		_stop_live_powers()
+	_apply_speed()
+	_refresh_controls()
+	log_channel.info("abilities", {"on": on})
+
+
+func _on_reset() -> void:
+	_memory["speed"] = 1.0
+	_memory["trampoline"] = false
+	_memory["autopilot"] = false
+	trampoline_toggle.set_pressed_no_signal(false)
+	autopilot_toggle.set_pressed_no_signal(false)
+	_stop_live_powers()
+	_apply_speed()
+	_refresh_controls()
+	log_channel.info("abilities_reset")
+
+
+## Pause and the hanging ball belong to this battle only: they just stop.
+func _stop_live_powers() -> void:
+	if _paused:
+		pause_button.set_pressed_no_signal(false)
+		_set_paused(false)
+	if _hanging:
+		_set_hang(false)
+
+
+func _refresh_controls() -> void:
+	var on := _enabled()
+	var has_me := not _local_slots.is_empty()
+	for button in speed_buttons:
+		button.disabled = not on
+	pause_button.disabled = not on
+	step_button.disabled = not on or not _paused
+	ball_to_me_button.disabled = not on or not has_me
+	hang_toggle.disabled = not on
+	trampoline_toggle.disabled = not on
+	autopilot_toggle.disabled = not on or not has_me
+	for button in drop_box.get_children():
+		(button as Button).disabled = not on
+	restart_button.disabled = not on
+
+
 # --- time -------------------------------------------------------------------------------
 
 func _set_speed(speed: float) -> void:
-	speed = maxf(speed, 0.01)
-	_memory["speed"] = speed
+	_memory["speed"] = maxf(speed, 0.01)
+	_apply_speed()
+
+
+## The chosen speed while on, ×1 while off.
+func _apply_speed() -> void:
+	var speed := float(_memory.get("speed", 1.0)) if _enabled() else 1.0
 	var base := int(_memory["base_ticks"])
 	Engine.physics_ticks_per_second = maxi(1, roundi(float(base) * speed))
 	Engine.time_scale = speed
@@ -139,7 +205,7 @@ func _set_speed(speed: float) -> void:
 func _set_paused(on: bool) -> void:
 	_paused = on
 	_session.set_physics_process(not on and _session._running)
-	step_button.disabled = not on
+	step_button.disabled = not on or not _enabled()
 	if on:
 		_hold_view()
 	log_channel.info("pause", {"on": on, "tick": _sim.state.tick})
@@ -163,7 +229,7 @@ func _hold_view() -> void:
 # --- tick hooks ---------------------------------------------------------------------------
 
 func _debug_sample(slot: int) -> Dictionary:
-	if bool(_memory.get("autopilot", false)) and _bots.has(slot):
+	if _enabled() and bool(_memory.get("autopilot", false)) and _bots.has(slot):
 		return (_bots[slot] as AiOpponent).decide(_sim.state, _sim.cfg["physics"], _sim.cfg["arena"])
 	return _orig_sample.call(slot)
 
@@ -177,7 +243,7 @@ func _debug_step(inputs: Array) -> int:
 
 func _before_tick() -> void:
 	var state := _sim.state
-	if not bool(_memory.get("trampoline", false)) or state.phase != VolleySim.Phase.PLAY:
+	if not _enabled() or not bool(_memory.get("trampoline", false)) or state.phase != VolleySim.Phase.PLAY:
 		return
 	var ball := state.balls[0]
 	if ball.stick > 0 or ball.vy >= 0.0:
@@ -261,8 +327,8 @@ func _drop_ball(team: int) -> void:
 
 func _restart() -> void:
 	var root_events := _battle.get("root_events") as RootEvents
-	var setup := _battle.get("_setup") as MatchSetup
-	if root_events == null or setup == null:
+	var match_setup := _battle.get("_setup") as MatchSetup
+	if root_events == null or match_setup == null:
 		return
 	log_channel.info("restart_match", {"tick": _sim.state.tick})
-	root_events.ev_start_game.emit({"match_setup": setup})
+	root_events.ev_start_game.emit({"match_setup": match_setup})

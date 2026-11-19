@@ -2,7 +2,8 @@ class_name DebugTab
 extends VBoxContainer
 
 ## Base of a debug panel tab (the root node of its scene). The panel creates the tab when its
-## target appears (`DebugTabDef.target_scene`) and frees it when the target leaves the tree.
+## target appears (`DebugTabDef.target_scene`) and frees it when the target leaves the tree;
+## an `always_open` tab is made once (target null) and hears its target in `on_target_changed`.
 ## Debug code may read and change the target's private fields: game code never knows about tabs.
 
 ## Set by the panel before `attach`.
@@ -23,4 +24,9 @@ func attach(_target: Node, _memory: Dictionary) -> void:
 
 ## The target is leaving the tree: undo whatever the tab changed outside the target.
 func detach() -> void:
+	pass
+
+
+## `always_open` tabs only: their target entered the tree (after its `initialize`) or left (null).
+func on_target_changed(_target: Node) -> void:
 	pass

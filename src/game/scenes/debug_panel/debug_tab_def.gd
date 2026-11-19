@@ -10,6 +10,9 @@ extends Resource
 ## The tab exists while a scene from this file is in the tree (e.g. the battle) and works on it.
 ## Empty = the tab is always there, without a target.
 @export_file("*.tscn") var target_scene: String = ""
+## The tab is there all the time; `target_scene` only tells it when its target comes and goes
+## (`DebugTab.on_target_changed`).
+@export var always_open: bool = false
 
 
 ## `target_scene` as a `res://` path (the inspector may store a `uid://`), compared with

@@ -7,3 +7,5 @@
 script = ExtResource("1_def")
 title = "Симуляция"
 scene = ExtResource("2_scene")
+target_scene = "res://src/game/scenes/game/game.tscn"
+always_open = true

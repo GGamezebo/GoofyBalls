@@ -1,0 +1,62 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/config_debug/config_editor.gd" id="1_ed"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/panels/config_debug/config_field_row.tscn" id="2_row"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/panels/config_debug/config_group_label.tscn" id="3_group"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/widgets/debug_header/debug_header.tscn" id="4_hd"]
+
+[node name="ConfigEditor" type="VBoxContainer" node_paths=PackedStringArray("header", "save_button", "status_label", "file_label", "fields_box", "confirm_dialog")]
+theme_override_constants/separation = 8
+script = ExtResource("1_ed")
+header = NodePath("Header/DebugHeader")
+save_button = NodePath("Header/Save")
+status_label = NodePath("Status")
+file_label = NodePath("File")
+fields_box = NodePath("Scroll/Fields")
+confirm_dialog = NodePath("Confirm")
+row_template = ExtResource("2_row")
+group_template = ExtResource("3_group")
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DebugHeader" parent="Header" instance=ExtResource("4_hd")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Save" type="Button" parent="Header"]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"AccentButton"
+theme_override_font_sizes/font_size = 18
+text = "Сохранить…"
+
+[node name="Status" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="File" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Fields" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Confirm" type="ConfirmationDialog" parent="."]
+title = "Поменять дефолтный конфиг?"
+size = Vector2i(640, 340)
+visible = false
+ok_button_text = "Да, сохранить"
+dialog_autowrap = true
+cancel_button_text = "Отмена"

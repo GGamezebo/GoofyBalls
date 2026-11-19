@@ -1,8 +1,8 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/preset_debug/preset_field_row.gd" id="1_row"]
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/config_debug/config_field_row.gd" id="1_row"]
 
-[node name="PresetFieldRow" type="HBoxContainer" node_paths=PackedStringArray("name_label", "spin", "check")]
+[node name="ConfigFieldRow" type="HBoxContainer" node_paths=PackedStringArray("name_label", "spin", "check")]
 theme_override_constants/separation = 10
 script = ExtResource("1_row")
 name_label = NodePath("Name")

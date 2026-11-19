@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/panels/preset_debug/preset_debug_tab.tscn" id="1_base"]
-
-[node name="ArenaDebugTab" instance=ExtResource("1_base")]
-section = "arena"

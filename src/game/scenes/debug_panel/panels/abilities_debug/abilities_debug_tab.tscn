@@ -2,10 +2,12 @@
 
 [ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/abilities_debug/abilities_debug_tab.gd" id="1_tab"]
 [ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/panels/abilities_debug/drop_button.tscn" id="2_drop"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/widgets/debug_header/debug_header.tscn" id="3_hd"]
 
-[node name="AbilitiesDebugTab" type="VBoxContainer" node_paths=PackedStringArray("speed_buttons", "status_label", "pause_button", "step_button", "ball_to_me_button", "hang_toggle", "trampoline_toggle", "autopilot_toggle", "drop_box", "restart_button")]
+[node name="AbilitiesDebugTab" type="VBoxContainer" node_paths=PackedStringArray("header", "speed_buttons", "status_label", "pause_button", "step_button", "ball_to_me_button", "hang_toggle", "trampoline_toggle", "autopilot_toggle", "drop_box", "restart_button")]
 theme_override_constants/separation = 8
 script = ExtResource("1_tab")
+header = NodePath("DebugHeader")
 speed_buttons = [NodePath("Scroll/Box/Speeds/Speed0"), NodePath("Scroll/Box/Speeds/Speed1"), NodePath("Scroll/Box/Speeds/Speed2"), NodePath("Scroll/Box/Speeds/Speed3"), NodePath("Scroll/Box/Speeds/Speed4"), NodePath("Scroll/Box/Speeds/Speed5")]
 status_label = NodePath("Status")
 pause_button = NodePath("Scroll/Box/TimeRow/Pause")
@@ -17,6 +19,9 @@ autopilot_toggle = NodePath("Scroll/Box/Autopilot")
 drop_box = NodePath("Scroll/Box/Drops")
 drop_template = ExtResource("2_drop")
 restart_button = NodePath("Scroll/Box/Restart")
+
+[node name="DebugHeader" parent="." instance=ExtResource("3_hd")]
+layout_mode = 2
 
 [node name="Status" type="Label" parent="."]
 layout_mode = 2

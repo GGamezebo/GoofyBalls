@@ -1,8 +1,8 @@
-class_name PresetFieldRow
+class_name ConfigFieldRow
 extends HBoxContainer
 
-## One field of a preset debug tab: its name and a spin box (numbers) or a check box (flags).
-## Emits the new value typed like the preset field (int stays int).
+## One field of a config editor: its name and a spin box (numbers) or a check box (flags).
+## Emits the new value typed like the config field (int stays int).
 
 signal ev_changed(key: String, value: Variant)
 
