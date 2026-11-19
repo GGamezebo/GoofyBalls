@@ -15,8 +15,6 @@ const HEALTH_LOG_PERIOD_MS := 5000
 @export var tuning: NetTuning
 ## Network emulation for debug builds; null or inactive = real network only.
 @export var lag_profile: LagProfile
-## Emulation presets the debug overlay can switch between (index 0 = off).
-@export var lag_presets: Array[LagProfile] = []
 ## Direct P2P link to the opponent (set before setup); null = relay only.
 var transport: PeerTransport
 
@@ -170,19 +168,7 @@ func get_stats() -> Dictionary:
 	return out
 
 
-func lag_preset_titles() -> Array[String]:
-	var titles: Array[String] = []
-	for profile in lag_presets:
-		titles.append(profile.title)
-	return titles
-
-
-func select_lag_preset(index: int) -> void:
-	if index >= 0 and index < lag_presets.size():
-		set_lag_profile(lag_presets[index])
-
-
-## Switch network emulation during a match (debug overlay).
+## Switch network emulation during a match (debug builds only).
 func set_lag_profile(profile: LagProfile) -> void:
 	lag_profile = profile
 	if _adaptor != null and OS.is_debug_build():

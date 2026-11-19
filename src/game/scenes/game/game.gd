@@ -2,8 +2,6 @@ extends IScene
 
 ## Battle context — orchestration only: MatchSetup → sim → session (local or rollback) →
 ## inputs → view → HUD (via GameEvents only, no reference) → result (`root_events.ev_exit_game`).
-## Debug panel tabs (App/Debug): "Симуляция" in every match, "Сеть" online; enabled in `initialize`,
-## disabled in `deinit`, fed through their events Resources.
 ## F6: plays the exported default setup (vs AI) on its own.
 
 @export var root_events: RootEvents
@@ -16,17 +14,6 @@ extends IScene
 @export var ai_profile: AiProfile
 ## Direct link to the opponent, put there by App/Online (null = relay only).
 @export var net_link: NetLink
-## Network emulation presets for the "Сеть" debug tab (index 0 = off).
-@export var lag_profiles: Array[LagProfile] = []
-@export var determinism_probe: DeterminismProbe
-## App/Debug state events (opened only in non-release builds; nobody listens otherwise).
-@export var debug_events: DebugEvents
-## "Сеть" tab, online matches only.
-@export var net_debug_tab: DebugTabDef
-@export var net_debug_events: NetDebugEvents
-## "Симуляция" tab (determinism probe), every match.
-@export var sim_debug_tab: DebugTabDef
-@export var sim_debug_events: SimDebugEvents
 @export var match_view: MatchView
 @export var session_parent: Node
 ## Keep showing the final rally this long before the results screen.
@@ -59,7 +46,7 @@ func initialize(data: Dictionary) -> void:
 	_inputs = MatchInputs.new(_setup, my_id, _sim, ai_profile)
 
 	var transport: PeerTransport = net_link.transport if net_link != null else null
-	_session = MatchSessionFactory.create(_online, net_tuning, transport, lag_profiles)
+	_session = MatchSessionFactory.create(_online, net_tuning, transport)
 	_session.name = "Session"
 	session_parent.add_child(_session)
 	_session.bind_sim(_inputs.slot_count(), _inputs.sample, _step, _sim.save_state, _sim.load_state, VolleySim.neutral_input())
@@ -75,7 +62,6 @@ func initialize(data: Dictionary) -> void:
 	_listener.add(game_events.ev_pause_requested, func() -> void: _session.set_paused(true))
 	_listener.add(game_events.ev_resume_requested, func() -> void: _session.set_paused(false))
 	_listener.add(game_events.ev_exit_requested, _on_exit_requested)
-	_enable_debug_tabs()
 
 	var local_slots := _inputs.local_slots()
 	match_view.setup(_sim, _setup, local_slots)
@@ -97,8 +83,6 @@ func deinit() -> void:
 			_session.shutdown()
 		else:
 			_session.leave()
-	debug_events.ev_tab_disabled.emit(net_debug_tab)
-	debug_events.ev_tab_disabled.emit(sim_debug_tab)
 	_listener.deinit()
 	super.deinit()
 
@@ -189,29 +173,6 @@ func _on_exit_requested() -> void:
 	_session.leave()
 	# Back to the menu closes an online room by itself (HFSM App/Online/Room).
 	root_events.ev_return_to_menu.emit({})
-
-
-## Listeners first: a tab asks for its data as soon as the debug panel creates it.
-func _enable_debug_tabs() -> void:
-	_listener.add(net_debug_events.ev_stats_requested, func() -> void: net_debug_events.ev_stats.emit(_session.get_stats()))
-	_listener.add(net_debug_events.ev_lag_presets_requested, func() -> void: net_debug_events.ev_lag_presets.emit(_session.lag_preset_titles()))
-	_listener.add(net_debug_events.ev_lag_preset_selected, _on_lag_preset_selected)
-	_listener.add(sim_debug_events.ev_probe_requested, _on_probe_requested)
-	if _online:
-		debug_events.ev_tab_enabled.emit(net_debug_tab)
-	debug_events.ev_tab_enabled.emit(sim_debug_tab)
-
-
-func _on_lag_preset_selected(index: int) -> void:
-	_session.select_lag_preset(index)
-
-
-func _on_probe_requested() -> void:
-	if determinism_probe == null:
-		return
-	var result := determinism_probe.run()
-	_log.info("determinism_probe", result)
-	sim_debug_events.ev_probe_result.emit(result)
 
 
 func _build_result(aborted: bool, reason: MatchSession.AbortReason) -> Dictionary:

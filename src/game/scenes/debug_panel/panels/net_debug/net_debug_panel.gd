@@ -1,33 +1,44 @@
 class_name NetDebugPanel
-extends VBoxContainer
+extends DebugTab
 
-## Debug panel tab for online matches: link, ping, input delay, rollbacks, skipped ticks,
-## desyncs, FPS, plus lag emulation presets for our outgoing traffic.
-## Talks only through `NetDebugEvents`: asks for the preset titles when it appears and pulls
-## stats while it is on screen; the session owner (battle context) answers.
+## "Сеть" tab of online battles: link, ping, input delay, rollbacks, skipped ticks, desyncs, FPS,
+## plus lag emulation presets for our outgoing traffic. Reads the battle's session directly; the
+## chosen preset is remembered and applied again in the next online battle.
 
-@export var events: NetDebugEvents
 @export var stats_label: Label
 @export var lag_buttons: Array[Button] = []
+## Emulation presets, one per button (index 0 = off).
+@export var lag_presets: Array[LagProfile] = []
 ## Stats refresh period (s) while the tab is on screen.
 @export var refresh_sec: float = 0.25
 
 var _listener := EventListener.new()
-var _stats: Dictionary = {}
+var _session: RollbackSession
+var _memory: Dictionary = {}
 var _refresh_left: float = 0.0
 
 
-func _ready() -> void:
+func accepts(target: Node) -> bool:
+	return target.get("_session") is RollbackSession
+
+
+func attach(target: Node, memory: Dictionary) -> void:
+	_session = target.get("_session") as RollbackSession
+	_memory = memory
 	for i in lag_buttons.size():
-		lag_buttons[i].visible = false
-		_listener.add(lag_buttons[i].pressed, func() -> void: events.ev_lag_preset_selected.emit(i))
-	_listener.add(events.ev_stats, _on_stats)
-	_listener.add(events.ev_lag_presets, _on_lag_presets)
-	events.ev_lag_presets_requested.emit()
+		var has_preset := i < lag_presets.size() and lag_presets[i] != null
+		lag_buttons[i].visible = has_preset
+		if has_preset:
+			lag_buttons[i].text = lag_presets[i].title
+			_listener.add(lag_buttons[i].pressed, _select_lag.bind(i))
+	var remembered := int(_memory.get("lag", 0))
+	if remembered > 0:
+		_select_lag(remembered)
 
 
-func _exit_tree() -> void:
+func detach() -> void:
 	_listener.deinit()
+	_session = null
 
 
 func _process(delta: float) -> void:
@@ -37,20 +48,15 @@ func _process(delta: float) -> void:
 	if _refresh_left > 0.0:
 		return
 	_refresh_left = refresh_sec
-	events.ev_stats_requested.emit()
-	stats_label.text = format_stats(_stats, Engine.get_frames_per_second())
+	var stats := _session.get_stats() if is_instance_valid(_session) else {}
+	stats_label.text = format_stats(stats, Engine.get_frames_per_second())
 
 
-func _on_stats(stats: Dictionary) -> void:
-	_stats = stats
-
-
-## One title per emulation preset button; extra buttons are hidden.
-func _on_lag_presets(titles: Array[String]) -> void:
-	for i in lag_buttons.size():
-		lag_buttons[i].visible = i < titles.size()
-		if i < titles.size():
-			lag_buttons[i].text = titles[i]
+func _select_lag(index: int) -> void:
+	if not is_instance_valid(_session) or index < 0 or index >= lag_presets.size():
+		return
+	_session.set_lag_profile(lag_presets[index])
+	_memory["lag"] = index
 
 
 static func format_stats(stats: Dictionary, fps: float) -> String:

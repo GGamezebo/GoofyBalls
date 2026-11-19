@@ -113,16 +113,6 @@ func is_online() -> bool:
 	return false
 
 
-## Numbers for the net overlay; empty for local play.
+## Connection health (link, ping, rollbacks, ...) for logs and diagnostics; empty for local play.
 func get_stats() -> Dictionary:
 	return {}
-
-
-## Titles of the network emulation presets the debug overlay may offer; empty = none (offline).
-func lag_preset_titles() -> Array[String]:
-	return []
-
-
-## Switch network emulation to preset `index` of `lag_preset_titles()`; no-op when out of range.
-func select_lag_preset(_index: int) -> void:
-	pass

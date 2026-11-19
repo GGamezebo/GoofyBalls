@@ -13,7 +13,7 @@ Context scene:
 UI:
 - Static UI (all elements known upfront) = nodes in `.tscn` built in editor; script only sets state/text/visibility, connects signals.
 - Only dynamic UI in code, via editor-made template `.tscn` + `instantiate()`; never `Control.new()` trees.
-- Debug UI = tabs of the `DebugPanel` context (HFSM `App/Debug`, opened by AppRoot only when `OS.is_debug_build()`). A context enables its own `DebugTabDef` via `DebugEvents` in `initialize`, disables it in `deinit`, feeds it only through that tab's events Resource. A tab = `debug_panel/panels/{name}/` (scene + events `.tres` + `DebugTabDef`). No debug widgets in HUD/screens.
+- Debug UI = tabs of the `DebugPanel` context (HFSM `App/Debug`, opened by AppRoot only when `OS.is_debug_build()`). All debug code lives in `debug_panel/`; game code never references it and gets no debug exports, events, getters or hooks. The panel watches the tree: a scene from a tab's `DebugTabDef.target_scene` enters (e.g. the battle) → it creates the tab and hands it that scene; the scene leaves → tab freed. Tabs may read and change their target's private fields (the one exception to encapsulation and "no direct refs"). A tab = `debug_panel/panels/{name}/` (`DebugTab` scene + `DebugTabDef`, listed in `debug_panel.tscn`). No debug widgets in HUD/screens.
 - Game entities with visuals (blob, ball, court, pickups, FX): at least a node skeleton in `.tscn`, editable in the editor; script only drives it, no `_draw()` art (`view.md`).
 No singletons:
 - No autoloads, static global state, or self-registering instances. Only third-party plugins may bring one (rollback `SyncManager`).

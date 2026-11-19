@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/preset_debug/preset_field_row.gd" id="1_row"]
+
+[node name="PresetFieldRow" type="HBoxContainer" node_paths=PackedStringArray("name_label", "spin", "check")]
+theme_override_constants/separation = 10
+script = ExtResource("1_row")
+name_label = NodePath("Name")
+spin = NodePath("Spin")
+check = NodePath("Check")
+
+[node name="Name" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "field_name"
+clip_text = true
+
+[node name="Spin" type="SpinBox" parent="."]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+max_value = 1000.0
+step = 0.001
+select_all_on_focus = true
+
+[node name="Check" type="CheckBox" parent="."]
+visible = false
+layout_mode = 2
+focus_mode = 0

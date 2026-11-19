@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cmioethm80hy7" path="res://src/common/match_setup.gd" id="1_ms"]
 [ext_resource type="Script" uid="uid://cwvhm5ykhp16t" path="res://src/common/team_setup.gd" id="2_ts"]
 [ext_resource type="Script" uid="uid://cdlifcbdrw7o5" path="res://src/common/slot_setup.gd" id="3_ss"]
-[ext_resource type="Resource" path="res://src/common/presets/physics_classic.tres" id="4_ph"]
+[ext_resource type="Resource" uid="uid://bws6072ermmkq" path="res://src/common/presets/physics_classic.tres" id="4_ph"]
 [ext_resource type="Resource" path="res://src/common/presets/arena_s.tres" id="5_ar"]
 [ext_resource type="Resource" path="res://src/common/presets/rules_points_7.tres" id="6_ru"]
 

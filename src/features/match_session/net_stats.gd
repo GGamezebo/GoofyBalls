@@ -1,7 +1,7 @@
 class_name NetStats
 extends RefCounted
 
-## Rollback health counters for the overlay and the end-of-match log line.
+## Rollback health counters for diagnostics (debug panel, logs) and the end-of-match log line.
 
 var rollbacks: int = 0
 var rollback_ticks_total: int = 0

@@ -1,13 +1,19 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/game/scenes/debug_panel/debug_panel.gd" id="1_dbg"]
-[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/debug_events.tres" id="2_ev"]
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/debug_tab_def.gd" id="2_def"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/preset_debug/physics_tab.tres" id="5_phys"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/preset_debug/arena_tab.tres" id="6_arena"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/preset_debug/rules_tab.tres" id="7_rules"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/abilities_debug/abilities_tab.tres" id="8_abil"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/net_debug/net_tab.tres" id="9_net"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/sim_debug/sim_tab.tres" id="10_sim"]
 [ext_resource type="Resource" path="res://src/common/log_settings.tres" id="3_log"]
 [ext_resource type="Theme" path="res://src/ui/theme/goofy_theme.tres" id="4_th"]
 
 [node name="DebugPanel" type="Node" node_paths=PackedStringArray("open_button", "window", "tabs", "empty_label")]
 script = ExtResource("1_dbg")
-debug_events = ExtResource("2_ev")
+tab_defs = Array[ExtResource("2_def")]([ExtResource("5_phys"), ExtResource("6_arena"), ExtResource("7_rules"), ExtResource("8_abil"), ExtResource("9_net"), ExtResource("10_sim")])
 log_settings = ExtResource("3_log")
 open_button = NodePath("Layer/Root/OpenButton")
 window = NodePath("Layer/Root/Window")
@@ -45,10 +51,10 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -660.0
+offset_left = -724.0
 offset_top = 110.0
 offset_right = -24.0
-offset_bottom = 640.0
+offset_bottom = 860.0
 grow_horizontal = 0
 theme_type_variation = &"PillPanel"
 

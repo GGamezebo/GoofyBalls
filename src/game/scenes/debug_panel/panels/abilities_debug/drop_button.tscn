@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="DropButton" type="Button"]
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "Уронить мяч к команде 1"
