@@ -2,8 +2,9 @@ class_name Hud
 extends CanvasLayer
 
 ## Match HUD (concept/ui-match): score on top, pause button, big "ОЧКО!" flash, status line,
-## pause menu, touch controls and the net overlay. Listens to GameEvents; talks back only
-## through GameEvents (pause / resume / exit requests).
+## pause menu and touch controls. Lives on GameEvents only: subscribes itself on `_ready`,
+## unsubscribes on `_exit_tree`, talks back through GameEvents (pause / resume / exit requests).
+## The game scene holds no reference to it.
 
 @export var game_events: GameEvents
 @export var palette: TeamPalette
@@ -18,14 +19,13 @@ extends CanvasLayer
 @export var exit_button: Button
 @export var pause_note: Label
 @export var virtual_controls: VirtualControls
-@export var net_overlay: NetOverlay
 
 var _listener := EventListener.new()
 var _info: Dictionary = {}
 var _point_tween: Tween
 
 
-func initialize() -> void:
+func _ready() -> void:
 	_listener.add(game_events.ev_match_started, _on_match_started)
 	_listener.add(game_events.ev_score_changed, _on_score_changed)
 	_listener.add(game_events.ev_point, _on_point)
@@ -40,7 +40,7 @@ func initialize() -> void:
 	status_label.visible = false
 
 
-func deinit() -> void:
+func _exit_tree() -> void:
 	_listener.deinit()
 	virtual_controls.release_all()
 

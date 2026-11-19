@@ -1,0 +1,69 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/features/net_debug/net_debug_panel.gd" id="1_no"]
+[ext_resource type="Resource" path="res://src/features/net_debug/net_debug_events.tres" id="2_ev"]
+
+[node name="NetDebugPanel" type="VBoxContainer" node_paths=PackedStringArray("stats_label", "lag_buttons")]
+theme_override_constants/separation = 10
+script = ExtResource("1_no")
+events = ExtResource("2_ev")
+stats_label = NodePath("Stats")
+lag_buttons = [NodePath("Lag/Lag0"), NodePath("Lag/Lag1"), NodePath("Lag/Lag2"), NodePath("Lag/Lag3"), NodePath("Lag/Lag4"), NodePath("Lag/Lag5")]
+
+[node name="Stats" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Офлайн"
+
+[node name="LagTitle" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 22
+text = "Эмуляция плохой сети (наш исходящий трафик):"
+autowrap_mode = 3
+
+[node name="Lag" type="GridContainer" parent="."]
+layout_mode = 2
+columns = 2
+
+[node name="Lag0" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag1" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag2" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag3" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag4" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag5" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"

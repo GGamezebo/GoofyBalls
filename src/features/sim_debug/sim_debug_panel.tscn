@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/features/sim_debug/sim_debug_panel.gd" id="1_sd"]
+[ext_resource type="Resource" path="res://src/features/sim_debug/sim_debug_events.tres" id="2_ev"]
+
+[node name="SimDebugPanel" type="VBoxContainer" node_paths=PackedStringArray("probe_button", "probe_label")]
+theme_override_constants/separation = 10
+script = ExtResource("1_sd")
+events = ExtResource("2_ev")
+probe_button = NodePath("Probe")
+probe_label = NodePath("ProbeResult")
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 22
+text = "Эталонный лог ввода через симуляцию: на ПК и телефоне хеш должен совпасть с эталоном."
+autowrap_mode = 3
+
+[node name="Probe" type="Button" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Проверить детерминизм"
+
+[node name="ProbeResult" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3

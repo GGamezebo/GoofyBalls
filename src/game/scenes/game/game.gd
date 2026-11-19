@@ -1,7 +1,9 @@
 extends IScene
 
 ## Battle context — orchestration only: MatchSetup → sim → session (local or rollback) →
-## inputs → view → HUD (via GameEvents) → result (`root_events.ev_exit_game`).
+## inputs → view → HUD (via GameEvents only, no reference) → result (`root_events.ev_exit_game`).
+## Debug dock tabs: "Симуляция" in every match, "Сеть" online; enabled in `initialize`,
+## disabled in `deinit`, fed through their events Resources.
 ## F6: plays the exported default setup (vs AI) on its own.
 
 @export var root_events: RootEvents
@@ -17,8 +19,15 @@ extends IScene
 ## Network emulation presets for the debug overlay (index 0 = off).
 @export var lag_profiles: Array[LagProfile] = []
 @export var determinism_probe: DeterminismProbe
+## App-wide debug dock (non-release builds; nobody listens otherwise).
+@export var debug_events: DebugEvents
+## "Сеть" tab, online matches only.
+@export var net_debug_panel: DebugPanelDef
+@export var net_debug_events: NetDebugEvents
+## "Симуляция" tab (determinism probe), every match.
+@export var sim_debug_panel: DebugPanelDef
+@export var sim_debug_events: SimDebugEvents
 @export var match_view: MatchView
-@export var hud: Hud
 @export var session_parent: Node
 ## Keep showing the final rally this long before the results screen.
 @export var end_linger_ticks: int = 120
@@ -63,14 +72,10 @@ func initialize(data: Dictionary) -> void:
 	_listener.add(_session.ev_stopped, _on_session_stopped)
 	_listener.add(_session.ev_aborted, _on_session_aborted)
 
-	hud.initialize()
 	_listener.add(game_events.ev_pause_requested, func() -> void: _session.set_paused(true))
 	_listener.add(game_events.ev_resume_requested, func() -> void: _session.set_paused(false))
 	_listener.add(game_events.ev_exit_requested, _on_exit_requested)
-	_listener.add(hud.net_overlay.ev_lag_preset_selected, _on_lag_preset_selected)
-	_listener.add(hud.net_overlay.ev_probe_requested, _on_probe_requested)
-	hud.net_overlay.bind_stats(_session.get_stats)
-	hud.net_overlay.set_lag_presets(_session.lag_preset_titles())
+	_enable_debug_panels()
 
 	var local_slots := _inputs.local_slots()
 	match_view.setup(_sim, _setup, local_slots)
@@ -92,7 +97,8 @@ func deinit() -> void:
 			_session.shutdown()
 		else:
 			_session.leave()
-	hud.deinit()
+	debug_events.ev_panel_disabled.emit(net_debug_panel)
+	debug_events.ev_panel_disabled.emit(sim_debug_panel)
 	_listener.deinit()
 	super.deinit()
 
@@ -185,6 +191,17 @@ func _on_exit_requested() -> void:
 	root_events.ev_return_to_menu.emit({})
 
 
+## Listeners first: a tab asks for its data as soon as the dock creates it.
+func _enable_debug_panels() -> void:
+	_listener.add(net_debug_events.ev_stats_requested, func() -> void: net_debug_events.ev_stats.emit(_session.get_stats()))
+	_listener.add(net_debug_events.ev_lag_presets_requested, func() -> void: net_debug_events.ev_lag_presets.emit(_session.lag_preset_titles()))
+	_listener.add(net_debug_events.ev_lag_preset_selected, _on_lag_preset_selected)
+	_listener.add(sim_debug_events.ev_probe_requested, _on_probe_requested)
+	if _online:
+		debug_events.ev_panel_enabled.emit(net_debug_panel)
+	debug_events.ev_panel_enabled.emit(sim_debug_panel)
+
+
 func _on_lag_preset_selected(index: int) -> void:
 	_session.select_lag_preset(index)
 
@@ -194,7 +211,7 @@ func _on_probe_requested() -> void:
 		return
 	var result := determinism_probe.run()
 	_log.info("determinism_probe", result)
-	hud.net_overlay.show_probe_result(result)
+	sim_debug_events.ev_probe_result.emit(result)
 
 
 func _build_result(aborted: bool, reason: MatchSession.AbortReason) -> Dictionary:

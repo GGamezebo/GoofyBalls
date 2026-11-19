@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DebugPanelDef" format=3]
+
+[ext_resource type="Script" path="res://src/features/debug_dock/debug_panel_def.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://src/features/sim_debug/sim_debug_panel.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_def")
+title = "Симуляция"
+scene = ExtResource("2_scene")

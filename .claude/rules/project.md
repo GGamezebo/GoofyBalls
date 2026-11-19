@@ -2,7 +2,7 @@
 Layout:
 - `main.tscn` → `src/game/main.gd` HFSM bootstrap · `src/game/hfsm/app_hfsm.json` app phases
 - `src/game/scenes/{app_root,online,room,menu,game,post_battle}` orchestration only (`online` = App/Online context beside Menu/Battle, turns `OnlineEvents` into HFSM events; `room` = nested App/Online/Room: one friend room + Nakama connection, closes itself on `ev.open_menu`); `game` also owns the battle rules `game/volley_sim/` (+`phases/`, `state/`, `buffs/`; deterministic `RefCounted`, `sim.md`), like quizmatik `game_logic`
-- `src/features/{name}/` isolated features (.gd+.tscn colocated): `match_session` (Local/Rollback, net tuning, lag emulation), `court_view`, `buff_fx`, `nakama_room` (Nakama client, friend room protocol, WebRTC link), `net_overlay`, `virtual_controls`, `ai_opponent`
+- `src/features/{name}/` isolated features (.gd+.tscn colocated): `match_session` (Local/Rollback, net tuning, lag emulation), `court_view`, `buff_fx`, `nakama_room` (Nakama client, friend room protocol, WebRTC link), `debug_dock` (non-release debug window in App root, tabs enabled by contexts) + its tabs `net_debug`, `sim_debug`, `virtual_controls`, `ai_opponent`
 - `src/entities/{blob,ball}/` entities built from shared components · `src/entities/components/{floor_shadow}/` their shared parts (`entities.md`)
 - `src/common/` shared Resources/presets (.tres) · `src/ui/{theme,components,dialogs,overlays,backgrounds}/` shared game UI (`ui.md`) · `core/` project-agnostic libs (never import `src/`) · `server/` Nakama · `tests/` headless · `tools/` generators · `concept/` art (Godot-ignored)
 Must:

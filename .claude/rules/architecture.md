@@ -13,6 +13,7 @@ Context scene:
 UI:
 - Static UI (all elements known upfront) = nodes in `.tscn` built in editor; script only sets state/text/visibility, connects signals.
 - Only dynamic UI in code, via editor-made template `.tscn` + `instantiate()`; never `Control.new()` trees.
+- Debug UI = tabs of `DebugDock` (App root, non-release). A context enables its own `DebugPanelDef` via `DebugEvents` in `initialize`, disables it in `deinit`, feeds it only through that tab's events Resource. No debug widgets in HUD/screens, no HFSM config for it.
 - Game entities with visuals (blob, ball, court, pickups, FX): at least a node skeleton in `.tscn`, editable in the editor; script only drives it, no `_draw()` art (`view.md`).
 No singletons:
 - No autoloads, static global state, or self-registering instances. Only third-party plugins may bring one (rollback `SyncManager`).

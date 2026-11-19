@@ -1,7 +1,8 @@
 extends IScene
 
 ## App root context: bridges RootEvents into HFSM events and opens the parallel
-## Platform and Online states. Holds no gameplay.
+## Platform and Online states. Holds no gameplay. Its scene also hosts the DebugDock
+## (non-release builds), which wires itself through DebugEvents.
 
 @export var root_events: RootEvents
 @export var platform_caps: PlatformCaps
