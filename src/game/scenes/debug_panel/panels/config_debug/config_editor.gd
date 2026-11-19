@@ -86,14 +86,25 @@ func set_battle(battle: Node) -> void:
 
 # --- fields -----------------------------------------------------------------------------
 
+## Rows in class order: base class fields first (the property list starts with the most derived
+## class), each export group under its title.
 func _build_rows() -> void:
-	var pending_group := ""
+	var blocks: Array = [[]]
 	for prop in _config.get_property_list():
+		if int(prop["usage"]) & PROPERTY_USAGE_CATEGORY:
+			blocks.append([])
+		else:
+			blocks.back().append(prop)
+	blocks.reverse()
+	for block in blocks:
+		_build_block(block)
+
+
+func _build_block(props: Array) -> void:
+	var pending_group := ""
+	for prop in props:
 		var usage := int(prop["usage"])
 		var key := str(prop["name"])
-		if usage & PROPERTY_USAGE_CATEGORY:
-			pending_group = ""
-			continue
 		if usage & PROPERTY_USAGE_GROUP:
 			pending_group = key
 			continue

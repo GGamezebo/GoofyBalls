@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BallSquishConfig" format=3]
+
+[ext_resource type="Script" path="res://src/entities/ball/ball_squish_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+ring_points = 20
+wobble_hz = 3.6
+wobble_damping = 0.22
+tension = 0.35
+min_offset = -0.45
+max_offset = 0.45
+substeps = 2
+max_step_sec = 0.03333333333333333
+dent_per_mps = 0.32
+max_impact = 16.0
+impact_bulge = 0.35
+impact_swell = 0.25
+stick_flatten = 0.72
+stretch_per_mps = 0.012
+max_stretch = 1.22
+stretch_min_mps = 0.5

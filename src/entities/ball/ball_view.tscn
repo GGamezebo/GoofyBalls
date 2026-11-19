@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dtwmbltcctd5l" path="res://src/entities/ball/ball_view.gd" id="1_ball"]
 [ext_resource type="Script" path="res://src/entities/components/floor_shadow/floor_shadow.gd" id="2_shadow"]
-[ext_resource type="Resource" path="res://src/entities/ball/ball_soft_ring.tres" id="3_ring"]
+[ext_resource type="Resource" path="res://src/entities/ball/ball_squish.tres" id="3_ring"]
 
 [sub_resource type="Gradient" id="Gradient_shadow"]
 offsets = PackedFloat32Array(0, 0.75, 1)
@@ -36,7 +36,7 @@ fill_to = Vector2(0.72, 0.33)
 
 [node name="BallView" type="Node2D" unique_id=1852744811 node_paths=PackedStringArray("skin", "shine", "glow_outer", "glow_inner", "seam_a", "seam_b", "rim", "shadow", "trail")]
 script = ExtResource("1_ball")
-ring_config = ExtResource("3_ring")
+squish = ExtResource("3_ring")
 skin = NodePath("Skin")
 shine = NodePath("Shine")
 glow_outer = NodePath("GlowOuter")

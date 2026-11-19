@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://simua85o04v4" path="res://src/entities/blob/blob_view.gd" id="1_blob"]
 [ext_resource type="Script" uid="uid://btthp4hw3y0xo" path="res://src/entities/components/floor_shadow/floor_shadow.gd" id="2_shadow"]
-[ext_resource type="Resource" path="res://src/entities/blob/blob_soft_ring.tres" id="3_ring"]
+[ext_resource type="Resource" path="res://src/entities/blob/jelly/blob.tres" id="3_ring"]
 
 [sub_resource type="Gradient" id="Gradient_shadow"]
 offsets = PackedFloat32Array(0, 0.8, 1)
@@ -41,7 +41,7 @@ fill_to = Vector2(1, 0.5)
 
 [node name="BlobView" type="Node2D" unique_id=370568195 node_paths=PackedStringArray("art", "goo", "halo_outer", "halo_inner", "skin", "light", "outline", "shine", "sparkle", "eyes", "pupils", "shadow", "tinted", "tinted_light", "name_label")]
 script = ExtResource("1_blob")
-ring_config = ExtResource("3_ring")
+jelly = ExtResource("3_ring")
 art = NodePath("Art")
 goo = NodePath("Art/Goo")
 halo_outer = NodePath("Art/HaloOuter")

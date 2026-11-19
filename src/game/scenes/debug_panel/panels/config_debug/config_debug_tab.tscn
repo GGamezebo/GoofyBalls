@@ -6,6 +6,8 @@
 [ext_resource type="Resource" uid="uid://bws6072ermmkq" path="res://src/common/presets/physics_classic.tres" id="4_ph"]
 [ext_resource type="Resource" path="res://src/common/presets/arena_s.tres" id="5_ar"]
 [ext_resource type="Resource" path="res://src/common/presets/rules_points_7.tres" id="6_ru"]
+[ext_resource type="Resource" path="res://src/entities/blob/jelly/blob.tres" id="7_blob"]
+[ext_resource type="Resource" path="res://src/entities/ball/ball_squish.tres" id="8_ball"]
 
 [sub_resource type="Resource" id="Resource_physics"]
 script = ExtResource("3_def")
@@ -28,10 +30,21 @@ config = ExtResource("6_ru")
 sim_section = "rules"
 save_note = "На этом конфиге стоит тест детерминизма: после сохранения обнови expected_hash в determinism_probe.tres (тест выведет новый хеш)."
 
+[sub_resource type="Resource" id="Resource_blob_jelly"]
+script = ExtResource("3_def")
+title = "Блоб: обычный"
+config = ExtResource("7_blob")
+save_note = "Это желейность персонажа «blob» (character_id): у других персонажей свои файлы в src/entities/blob/jelly/."
+
+[sub_resource type="Resource" id="Resource_ball_squish"]
+script = ExtResource("3_def")
+title = "Мяч"
+config = ExtResource("8_ball")
+
 [node name="ConfigDebugTab" type="VBoxContainer" node_paths=PackedStringArray("config_tabs")]
 theme_override_constants/separation = 8
 script = ExtResource("1_tab")
-configs = Array[ExtResource("3_def")]([SubResource("Resource_physics"), SubResource("Resource_arena"), SubResource("Resource_rules")])
+configs = Array[ExtResource("3_def")]([SubResource("Resource_physics"), SubResource("Resource_arena"), SubResource("Resource_rules"), SubResource("Resource_blob_jelly"), SubResource("Resource_ball_squish")])
 config_tabs = NodePath("Configs")
 editor_template = ExtResource("2_ed")
 

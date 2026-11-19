@@ -13,7 +13,7 @@ Placement (pick the first that fits):
 - Shared UI widget or the game theme → `src/ui/`; shared data/presets → `src/common/`.
 Component shape:
 - One responsibility; `class_name`; Node (with its node skeleton in the entity `.tscn`) or `RefCounted` for pure logic.
-- Tuning numbers in a config `Resource` (`@export` + `##`), default `.tres` next to the entity that uses it; runtime state in the component, never written into the shared `.tres`.
+- Tuning numbers in a config `Resource` (`@export` + `##`), default `.tres` next to the entity that uses it; runtime state in the component, never written into the shared `.tres`. Variants of one entity (characters) = one `.tres` each, picked by data (e.g. `BlobJellySet` by `character_id`), not by code.
 - Owner holds it via `@export` / creates it, calls it down; component only emits signals. No `get_parent()`/`owner`.
 - Varying behaviour stays in the owner (e.g. ring target shape per entity), passed in as data; no `if kind ==` inside the component.
 - Extract only on a second real use; first use stays in the entity.

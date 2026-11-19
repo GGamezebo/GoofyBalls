@@ -2,7 +2,9 @@ class_name SoftRingConfig
 extends Resource
 
 ## Tuning of a `SoftRing` soft body. One `.tres` per kind of body (shared, read-only at runtime).
+## Owners may extend it with their own deformation numbers, so one file holds a body's whole feel.
 
+@export_group("Ring")
 ## Points on the ring: more = smoother dents, more work per frame.
 @export var ring_points: int = 20
 ## Wobble frequency (Hz) and damping ratio: low = gooey tar, high = rubber.

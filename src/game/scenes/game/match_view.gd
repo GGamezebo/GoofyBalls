@@ -18,6 +18,9 @@ const TELEPORT_M := 1.5
 @export var blobs_parent: Node2D
 @export var blob_template: PackedScene
 @export var palette: TeamPalette
+## Jelly feel of each blob character (`SlotSetup.character_id`); null = the blob scene's own.
+@export var blob_jellies: BlobJellySet
+@export var log_settings: LogSettings
 ## Seconds for a small rollback correction to fade to ~37 % (≈ gone after 3×).
 @export var correction_tau: float = 0.035
 ## Big corrections glide no faster than this (m/s); the ball flies at up to ~15.
@@ -31,6 +34,7 @@ var floor_y: float = 760.0
 var origin := Vector2(800, 760)
 
 var _sim: VolleySim
+var _log: LogChannel
 var _blobs: Array[BlobView] = []
 var _ring: Array = []
 var _latest: int = -1
@@ -47,6 +51,8 @@ var _seen_impact: int = 0
 
 func setup(sim: VolleySim, match_setup: MatchSetup, local_slots: Array[int]) -> void:
 	_sim = sim
+	if _log == null:
+		_log = LogChannel.new("view", log_settings)
 	_ring.resize(RING)
 	_ring.fill(null)
 	for child in blobs_parent.get_children():
@@ -66,7 +72,13 @@ func setup(sim: VolleySim, match_setup: MatchSetup, local_slots: Array[int]) -> 
 	for i in _blobs.size():
 		var team := sim.state.players[i].team
 		var display_name := slots[i].display_name if i < slots.size() else ""
-		_blobs[i].setup(palette.color(team), sim.param("blob_radius") * px_per_m, display_name, local_slots.has(i))
+		var jelly: BlobJellyConfig = null
+		if blob_jellies != null and i < slots.size():
+			var character := slots[i].character_id
+			if not blob_jellies.has_character(character):
+				_log.warn("jelly_missing", {"character": character, "slot": i})
+			jelly = blob_jellies.for_character(character)
+		_blobs[i].setup(palette.color(team), sim.param("blob_radius") * px_per_m, display_name, local_slots.has(i), jelly)
 	ball_view.setup(sim.param("ball_radius") * px_per_m)
 	_seen_touch = sim.state.touch_serial
 	_seen_point = sim.state.point_serial

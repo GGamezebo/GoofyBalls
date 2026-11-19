@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://src/game/scenes/game/hud.tscn" id="19_hud"]
 [ext_resource type="Resource" path="res://src/common/net/net_link.tres" id="23_link"]
 [ext_resource type="Resource" path="res://src/features/ai_opponent/ai_normal.tres" id="24_ai"]
+[ext_resource type="Resource" path="res://src/entities/blob/jelly/blob_jelly_set.tres" id="30_jelly"]
 
 [node name="Game" type="Node" unique_id=2146771662 node_paths=PackedStringArray("match_view", "session_parent")]
 script = ExtResource("1_game")
@@ -37,6 +38,8 @@ court_view = NodePath("CourtView")
 ball_view = NodePath("BallView")
 blobs_parent = NodePath("Blobs")
 blob_template = ExtResource("18_blob")
+blob_jellies = ExtResource("30_jelly")
+log_settings = ExtResource("7_log")
 palette = ExtResource("6_pal")
 
 [node name="CourtView" parent="MatchView" unique_id=1370606984 instance=ExtResource("16_court")]

@@ -4,27 +4,15 @@ extends Node2D
 ## Glowing tar volleyball (concept + Gish squish). The look lives in ball_view.tscn and is tuned
 ## there in the editor: two glow rings, a yellow skin, a light spot, two spinning seams, a dark rim,
 ## plus a short trail and a floor shadow. The skin, light, glow, seams and rim are a spring ring:
-## impacts dent it, a blob it sticks to flattens it, speed stretches it. The script only moves and
-## reshapes those nodes. View-only state (ring, spin, trail) never feeds back into the sim.
+## impacts dent it, a blob it sticks to flattens it, speed stretches it (how much: `squish`, a
+## `BallSquishConfig`). The script only moves and reshapes those nodes. View-only state (ring,
+## spin, trail) never feeds back into the sim.
 
 ## Ball radius the nodes in the scene are drawn for.
 @export var design_radius_px: float = 64.0
 @export_group("Squish")
-## Spring ring of the body (points, wobble, tension, offset limits).
-@export var ring_config: SoftRingConfig
-## Ring speed (radius / s) one m/s of impact adds to the dent; capped by `max_impact`.
-@export var dent_per_mps: float = 0.32
-@export var max_impact: float = 16.0
-## On impact the far side bulges out, and the sides swell, by these shares of the dent.
-@export var impact_bulge: float = 0.35
-@export var impact_swell: float = 0.25
-## Side of the ball pressed against a blob is flattened to this share of the radius.
-@export var stick_flatten: float = 0.72
-## Stretch along the flight per m/s of speed, and the longest stretch.
-@export var stretch_per_mps: float = 0.012
-@export var max_stretch: float = 1.22
-## Below this speed (m/s) the ball is not stretched along its path.
-@export var stretch_min_mps: float = 0.5
+## How the ball feels as jelly (spring ring, dents, stretch). Empty = the class defaults.
+@export var squish: BallSquishConfig
 @export_group("Shape")
 ## Glow ring sizes and the rim's ring size, relative to the body.
 @export var glow_outer_scale: float = 1.45
@@ -75,7 +63,9 @@ var _uvs := PackedVector2Array()
 func _ready() -> void:
 	_trail_width = trail.width
 	trail.clear_points()
-	_ring = SoftRing.new(ring_config)
+	if squish == null:
+		squish = BallSquishConfig.new()
+	_ring = SoftRing.new(squish)
 	# Polygon2D UVs are in texture pixels.
 	_uvs = _ring.uvs(shine.texture.get_size() if shine.texture != null else Vector2.ONE)
 	_apply_size()
@@ -97,9 +87,9 @@ func apply(pos: Vector2, vel_mps: Vector2, frozen: bool, press: Vector2, floor_y
 	_press = press
 	var speed := vel_mps.length()
 	_stretch = 1.0
-	if not frozen and press == Vector2.ZERO and speed > stretch_min_mps:
+	if not frozen and press == Vector2.ZERO and speed > squish.stretch_min_mps:
 		_stretch_dir = Vector2(vel_mps.x, -vel_mps.y) / speed
-		_stretch = minf(1.0 + speed * stretch_per_mps, max_stretch)
+		_stretch = minf(1.0 + speed * squish.stretch_per_mps, squish.max_stretch)
 	_update_targets()
 	_ring.step(delta)
 	shadow.apply(floor_y - pos.y, radius_px, _size_factor())
@@ -111,9 +101,9 @@ func apply(pos: Vector2, vel_mps: Vector2, frozen: bool, press: Vector2, floor_y
 func impact(push_dir: Vector2, power: float) -> void:
 	if _ring == null:
 		return
-	var kick := minf(power, max_impact) * dent_per_mps
+	var kick := minf(power, squish.max_impact) * squish.dent_per_mps
 	# The contact side faces against the push: it dents in, the sides bulge out.
-	_ring.kick(-push_dir, kick, impact_bulge, impact_swell)
+	_ring.kick(-push_dir, kick, squish.impact_bulge, squish.impact_swell)
 
 
 ## Rest shape per ring point: stretched along the flight, flattened against the sticking blob.
@@ -124,7 +114,7 @@ func _update_targets() -> void:
 		if _stretch > 1.0:
 			target += SoftRing.stretch_target(d, _stretch_dir, _stretch)
 		if _press != Vector2.ZERO:
-			target += SoftRing.flatten_target(d, -_press, stick_flatten)
+			target += SoftRing.flatten_target(d, -_press, squish.stick_flatten)
 		_ring.targets[i] = target
 
 

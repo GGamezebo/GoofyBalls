@@ -5,8 +5,9 @@ extends Node2D
 ## drop, eyes that follow the ball, goo strands, floor shadow. The look lives in blob_view.tscn and
 ## is tuned there in the editor. The body is a spring ring that keeps its volume: it stretches up on
 ## take-off, is round at the apex, pancakes and wobbles on landing, dents where the ball hits, leans
-## into its run and flattens against a wall it sticks to (with goo strands). The script only moves,
-## reshapes and tints those nodes; view-only, a pure function of what `apply()` / `pulse()` get.
+## into its run and flattens against a wall it sticks to (with goo strands). How strongly it all
+## happens is the character's `BlobJellyConfig` (`jelly`). The script only moves, reshapes and
+## tints those nodes; view-only, a pure function of what `apply()` / `pulse()` get.
 ## Parts are drawn in white: those in `tinted` take the team color at setup, those in `tinted_light`
 ## a lighter one (their alpha stays). Light is white on top of the body, so it lightens any color.
 
@@ -14,39 +15,9 @@ extends Node2D
 ## scaled to the real radius.
 @export var design_radius_px: float = 128.0
 @export_group("Jelly")
-## Spring ring of the body (points, wobble, tension, offset limits).
-@export var ring_config: SoftRingConfig
-@export var rest_flatten: float = 0.94
-@export var stretch_per_mps: float = 0.022
-@export var max_stretch: float = 1.3
-@export var lean_per_mps: float = 0.02
-## Lean bends the body from this height down (share of the radius above the center, 0 = middle).
-@export var lean_height_bias: float = 0.3
-## Below this flight speed (m/s) the blob is not stretched along its path.
-@export var stretch_min_mps: float = 0.5
-## Ring speed (radius / s) one m/s of landing speed adds to the pancake.
-@export var land_per_mps: float = 0.2
-## On landing the sides bulge by this share of the squeeze; the top is pushed down by this share.
-@export var land_bulge: float = 0.8
-@export var land_top_share: float = 0.7
-@export var hit_dent: float = 2.4
-## Share of the hit dent the far side bulges out by.
-@export var hit_bulge: float = 0.5
-@export var wall_flatten: float = 0.72
-## Splat when the blob sticks to a wall (ring speed, radius / s) and how much the rest bulges.
-@export var cling_kick: float = 1.2
-@export var cling_bulge: float = 0.6
-@export_group("Goo")
-## Goo strand reach toward the wall, and its thickness, as shares of the radius.
-@export var goo_reach: float = 0.22
-@export var goo_width: float = 0.1
-## Seconds for the goo to grow or fade when the blob starts or stops sticking to a wall.
-@export var goo_sec: float = 0.12
-## Vertical gap between strands, how deep inside the body they root and how much each one droops
-## (shares of the radius).
-@export var goo_spacing: float = 0.45
-@export var goo_root_inset: float = 0.9
-@export var goo_droop: float = 0.06
+## How this blob feels as jelly (spring ring, squash, goo). `MatchView` passes the character's
+## own config to `setup`; this one is the default (F6, menu hero). Empty = the class defaults.
+@export var jelly: BlobJellyConfig
 @export_group("Eyes")
 ## How far pupils move toward the ball, in scene pixels (design radius).
 @export var pupil_travel_px: float = 9.0
@@ -116,13 +87,17 @@ func _ready() -> void:
 	_sparkle_unit = sparkle.position / design_radius_px
 	for child in goo.get_children():
 		_goo_lines.append(child)
-	_ring = SoftRing.new(ring_config)
-	# Polygon2D UVs are in texture pixels.
-	_uvs = _ring.uvs(light.texture.get_size() if light.texture != null else Vector2.ONE)
+	if jelly == null:
+		jelly = BlobJellyConfig.new()
+	_build_ring()
 	_apply_size()
 
 
-func setup(p_color: Color, p_radius_px: float, display_name: String, is_local: bool) -> void:
+## `p_jelly` = this character's jelly feel (null keeps the scene's `jelly`).
+func setup(p_color: Color, p_radius_px: float, display_name: String, is_local: bool, p_jelly: BlobJellyConfig = null) -> void:
+	if p_jelly != null and p_jelly != jelly:
+		jelly = p_jelly
+		_build_ring()
 	color = p_color
 	var light_color := color.lightened(light_tint)
 	for part in tinted:
@@ -144,18 +119,18 @@ func apply(pos: Vector2, vy_mps: float, on_floor: bool, floor_y: float, look_tar
 	position = pos
 	if on_floor and not _was_on_floor:
 		# Pancake: squeezed from below and above, spreads sideways.
-		var land := -minf(_last_vy, 0.0) * land_per_mps
-		_ring.kick(Vector2.DOWN, land, land_bulge)
-		_ring.kick(Vector2.UP, land * land_top_share, 0.0)
+		var land := -minf(_last_vy, 0.0) * jelly.land_per_mps
+		_ring.kick(Vector2.DOWN, land, jelly.land_bulge)
+		_ring.kick(Vector2.UP, land * jelly.land_top_share, 0.0)
 	if not on_floor:
 		_last_vy = vy_mps
 	_was_on_floor = on_floor
 	_on_floor = on_floor
 	_vel_mps = Vector2(vx_mps, vy_mps)
 	if cling != 0 and _cling == 0:
-		_ring.kick(Vector2(float(cling), 0.0), cling_kick, cling_bulge)
+		_ring.kick(Vector2(float(cling), 0.0), jelly.cling_kick, jelly.cling_bulge)
 	_cling = cling
-	_goo_t = move_toward(_goo_t, 1.0 if cling != 0 else 0.0, delta / goo_sec)
+	_goo_t = move_toward(_goo_t, 1.0 if cling != 0 else 0.0, delta / jelly.goo_sec)
 	var to_ball := look_target - pos
 	_look = to_ball.normalized() if to_ball.length() > 1.0 else Vector2.ZERO
 	_step_ring(delta)
@@ -163,11 +138,18 @@ func apply(pos: Vector2, vy_mps: float, on_floor: bool, floor_y: float, look_tar
 	shadow.apply(floor_y - pos.y, radius_px, _size_factor())
 
 
+## A new ring for `jelly` (its point count is fixed per ring; the other numbers are read live).
+func _build_ring() -> void:
+	_ring = SoftRing.new(jelly)
+	# Polygon2D UVs are in texture pixels.
+	_uvs = _ring.uvs(light.texture.get_size() if light.texture != null else Vector2.ONE)
+
+
 ## Dent where this blob touched the ball; `toward` = from the blob to the ball (screen space).
 func pulse(toward: Vector2 = Vector2.UP) -> void:
 	if _ring == null:
 		return
-	_ring.kick(toward.normalized() if toward != Vector2.ZERO else Vector2.UP, hit_dent, hit_bulge)
+	_ring.kick(toward.normalized() if toward != Vector2.ZERO else Vector2.UP, jelly.hit_dent, jelly.hit_bulge)
 
 
 func _step_ring(delta: float) -> void:
@@ -183,20 +165,20 @@ func _step_ring(delta: float) -> void:
 ## a little flat on the floor, flattened against a sticky wall.
 func _update_targets() -> void:
 	var speed := _vel_mps.length()
-	var along_dir := Vector2(_vel_mps.x, -_vel_mps.y) / speed if speed > stretch_min_mps else Vector2.ZERO
-	var stretch := minf(1.0 + speed * stretch_per_mps, max_stretch)
+	var along_dir := Vector2(_vel_mps.x, -_vel_mps.y) / speed if speed > jelly.stretch_min_mps else Vector2.ZERO
+	var stretch := minf(1.0 + speed * jelly.stretch_per_mps, jelly.max_stretch)
 	for i in _ring.size():
 		var d := _ring.dirs[i]
 		var target := 0.0
 		if not _on_floor:
-			if speed > stretch_min_mps:
+			if speed > jelly.stretch_min_mps:
 				target += SoftRing.stretch_target(d, along_dir, stretch)
 		else:
-			target += SoftRing.flatten_target(d, Vector2.DOWN, rest_flatten)
+			target += SoftRing.flatten_target(d, Vector2.DOWN, jelly.rest_flatten)
 			# Tar rolls: the front bulges forward and low, the back trails.
-			target += d.x * _vel_mps.x * lean_per_mps * maxf(d.y + lean_height_bias, 0.0)
+			target += d.x * _vel_mps.x * jelly.lean_per_mps * maxf(d.y + jelly.lean_height_bias, 0.0)
 		if _cling != 0:
-			target += SoftRing.flatten_target(d, Vector2(float(_cling), 0.0), wall_flatten)
+			target += SoftRing.flatten_target(d, Vector2(float(_cling), 0.0), jelly.wall_flatten)
 		_ring.targets[i] = target
 
 
@@ -236,12 +218,12 @@ func _update_goo() -> void:
 		return
 	var side := float(_cling)
 	for k in _goo_lines.size():
-		var y := (float(k) - 1.0) * goo_spacing
-		var root := _warp(Vector2(side * sqrt(1.0 - y * y) * goo_root_inset, y))
-		var tip := root + Vector2(side * goo_reach * design_radius_px * _goo_t, goo_droop * design_radius_px * float(k - 1))
+		var y := (float(k) - 1.0) * jelly.goo_spacing
+		var root := _warp(Vector2(side * sqrt(1.0 - y * y) * jelly.goo_root_inset, y))
+		var tip := root + Vector2(side * jelly.goo_reach * design_radius_px * _goo_t, jelly.goo_droop * design_radius_px * float(k - 1))
 		var strand := _goo_lines[k]
 		strand.points = PackedVector2Array([root, tip])
-		strand.width = goo_width * design_radius_px * _goo_t
+		strand.width = jelly.goo_width * design_radius_px * _goo_t
 
 
 func _apply_size() -> void:
