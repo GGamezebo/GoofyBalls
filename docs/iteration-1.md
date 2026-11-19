@@ -24,7 +24,7 @@
 | Прямое соединение игроков в комнате: UDP через WebRTC (P2P), запасной путь — relay | `src/features/nakama_room/webrtc_transport.gd`, `addons/webrtc_native`, `src/common/net/` |
 | Экраны по концептам: главная, «С другом», матч (HUD, пауза), итоги | `src/game/scenes/{menu,game,post_battle}/` |
 | Тач: левая половина — движение, правая — прыжок | `src/features/virtual_controls/` |
-| Панель отладки (кнопка «DBG» / F3, кроме релиза): вкладка «Сеть» в онлайн-бою (ping, откаты, рассинхроны, FPS, эмуляция) и «Симуляция» в любом бою (проверка детерминизма) | `src/features/debug_dock/`, `net_debug/`, `sim_debug/` |
+| Панель отладки (кнопка «DBG» / F3, кроме релиза): вкладка «Сеть» в онлайн-бою (ping, откаты, рассинхроны, FPS, эмуляция) и «Симуляция» в любом бою (проверка детерминизма) | `src/game/scenes/debug_panel/` (вкладки — `panels/{net_debug,sim_debug}/`) |
 | Логи одной строкой по каналам (`app`, `menu`, `online`, `match`, `net`, `results`) | `core/lib/log/`, `src/common/log_settings.tres` |
 | Тесты: симуляция, детерминизм, откат, сцены, e2e двух процессов | `tests/` |
 | Сборки Windows и Android, CI | `export_presets.cfg`, `.github/workflows/build.yml` |

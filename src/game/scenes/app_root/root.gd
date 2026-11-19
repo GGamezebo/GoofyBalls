@@ -1,8 +1,7 @@
 extends IScene
 
 ## App root context: bridges RootEvents into HFSM events and opens the parallel
-## Platform and Online states. Holds no gameplay. Its scene also hosts the DebugDock
-## (non-release builds), which wires itself through DebugEvents.
+## Platform and Online states, plus Debug (debug panel) outside release builds. Holds no gameplay.
 
 @export var root_events: RootEvents
 @export var platform_caps: PlatformCaps
@@ -29,6 +28,9 @@ func initialize(_data: Dictionary) -> void:
 		"root_events": root_events
 	})
 	add_event("ev.open_online")
+	# Before the menu opens (post-mount `ev.open_menu`), so the panel hears every context's tabs.
+	if OS.is_debug_build():
+		add_event("ev.open_debug")
 
 
 func deinit() -> void:

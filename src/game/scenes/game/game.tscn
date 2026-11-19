@@ -23,11 +23,11 @@
 [ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_freeze.tres" id="22_l5"]
 [ext_resource type="Resource" path="res://src/common/net/net_link.tres" id="23_link"]
 [ext_resource type="Resource" path="res://src/features/ai_opponent/ai_normal.tres" id="24_ai"]
-[ext_resource type="Resource" path="res://src/features/debug_dock/debug_events.tres" id="25_dbg"]
-[ext_resource type="Resource" path="res://src/game/scenes/game/debug_panels/net_panel.tres" id="26_netp"]
-[ext_resource type="Resource" path="res://src/features/net_debug/net_debug_events.tres" id="27_netev"]
-[ext_resource type="Resource" path="res://src/game/scenes/game/debug_panels/sim_panel.tres" id="28_simp"]
-[ext_resource type="Resource" path="res://src/features/sim_debug/sim_debug_events.tres" id="29_simev"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/debug_events.tres" id="25_dbg"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/net_debug/net_tab.tres" id="26_nett"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/net_debug/net_debug_events.tres" id="27_netev"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/sim_debug/sim_tab.tres" id="28_simt"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/sim_debug/sim_debug_events.tres" id="29_simev"]
 
 [node name="Game" type="Node" unique_id=2146771662 node_paths=PackedStringArray("match_view", "session_parent")]
 script = ExtResource("1_game")
@@ -42,9 +42,9 @@ net_link = ExtResource("23_link")
 lag_profiles = Array[ExtResource("20_lp")]([ExtResource("9_l0"), ExtResource("10_l1"), ExtResource("11_l2"), ExtResource("12_l3"), ExtResource("21_l4"), ExtResource("22_l5")])
 determinism_probe = ExtResource("13_probe")
 debug_events = ExtResource("25_dbg")
-net_debug_panel = ExtResource("26_netp")
+net_debug_tab = ExtResource("26_nett")
 net_debug_events = ExtResource("27_netev")
-sim_debug_panel = ExtResource("28_simp")
+sim_debug_tab = ExtResource("28_simt")
 sim_debug_events = ExtResource("29_simev")
 match_view = NodePath("MatchView")
 session_parent = NodePath("Sessions")

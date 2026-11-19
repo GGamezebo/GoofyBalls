@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/features/net_debug/net_debug_panel.gd" id="1_no"]
-[ext_resource type="Resource" path="res://src/features/net_debug/net_debug_events.tres" id="2_ev"]
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/net_debug/net_debug_panel.gd" id="1_no"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/net_debug/net_debug_events.tres" id="2_ev"]
 
 [node name="NetDebugPanel" type="VBoxContainer" node_paths=PackedStringArray("stats_label", "lag_buttons")]
 theme_override_constants/separation = 10

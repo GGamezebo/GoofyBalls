@@ -36,6 +36,10 @@
 				"scene": { "id": "post_battle", "async_loading": false, "keep_loaded": true },
 				"enter": ["ev.exit_game"],
 				"leave": ["ev.open_menu", "ev.start_game"]
+			},
+			"Debug": {
+				"scene": { "id": "debug_panel", "async_loading": false },
+				"enter": ["ev.open_debug"]
 			}
 		}
 	}

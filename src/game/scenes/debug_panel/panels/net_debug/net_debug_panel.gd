@@ -1,7 +1,7 @@
 class_name NetDebugPanel
 extends VBoxContainer
 
-## Debug dock tab for online matches: link, ping, input delay, rollbacks, skipped ticks,
+## Debug panel tab for online matches: link, ping, input delay, rollbacks, skipped ticks,
 ## desyncs, FPS, plus lag emulation presets for our outgoing traffic.
 ## Talks only through `NetDebugEvents`: asks for the preset titles when it appears and pulls
 ## stats while it is on screen; the session owner (battle context) answers.

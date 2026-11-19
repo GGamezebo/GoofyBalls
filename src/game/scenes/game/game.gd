@@ -2,7 +2,7 @@ extends IScene
 
 ## Battle context — orchestration only: MatchSetup → sim → session (local or rollback) →
 ## inputs → view → HUD (via GameEvents only, no reference) → result (`root_events.ev_exit_game`).
-## Debug dock tabs: "Симуляция" in every match, "Сеть" online; enabled in `initialize`,
+## Debug panel tabs (App/Debug): "Симуляция" in every match, "Сеть" online; enabled in `initialize`,
 ## disabled in `deinit`, fed through their events Resources.
 ## F6: plays the exported default setup (vs AI) on its own.
 
@@ -16,16 +16,16 @@ extends IScene
 @export var ai_profile: AiProfile
 ## Direct link to the opponent, put there by App/Online (null = relay only).
 @export var net_link: NetLink
-## Network emulation presets for the debug overlay (index 0 = off).
+## Network emulation presets for the "Сеть" debug tab (index 0 = off).
 @export var lag_profiles: Array[LagProfile] = []
 @export var determinism_probe: DeterminismProbe
-## App-wide debug dock (non-release builds; nobody listens otherwise).
+## App/Debug state events (opened only in non-release builds; nobody listens otherwise).
 @export var debug_events: DebugEvents
 ## "Сеть" tab, online matches only.
-@export var net_debug_panel: DebugPanelDef
+@export var net_debug_tab: DebugTabDef
 @export var net_debug_events: NetDebugEvents
 ## "Симуляция" tab (determinism probe), every match.
-@export var sim_debug_panel: DebugPanelDef
+@export var sim_debug_tab: DebugTabDef
 @export var sim_debug_events: SimDebugEvents
 @export var match_view: MatchView
 @export var session_parent: Node
@@ -75,7 +75,7 @@ func initialize(data: Dictionary) -> void:
 	_listener.add(game_events.ev_pause_requested, func() -> void: _session.set_paused(true))
 	_listener.add(game_events.ev_resume_requested, func() -> void: _session.set_paused(false))
 	_listener.add(game_events.ev_exit_requested, _on_exit_requested)
-	_enable_debug_panels()
+	_enable_debug_tabs()
 
 	var local_slots := _inputs.local_slots()
 	match_view.setup(_sim, _setup, local_slots)
@@ -97,8 +97,8 @@ func deinit() -> void:
 			_session.shutdown()
 		else:
 			_session.leave()
-	debug_events.ev_panel_disabled.emit(net_debug_panel)
-	debug_events.ev_panel_disabled.emit(sim_debug_panel)
+	debug_events.ev_tab_disabled.emit(net_debug_tab)
+	debug_events.ev_tab_disabled.emit(sim_debug_tab)
 	_listener.deinit()
 	super.deinit()
 
@@ -191,15 +191,15 @@ func _on_exit_requested() -> void:
 	root_events.ev_return_to_menu.emit({})
 
 
-## Listeners first: a tab asks for its data as soon as the dock creates it.
-func _enable_debug_panels() -> void:
+## Listeners first: a tab asks for its data as soon as the debug panel creates it.
+func _enable_debug_tabs() -> void:
 	_listener.add(net_debug_events.ev_stats_requested, func() -> void: net_debug_events.ev_stats.emit(_session.get_stats()))
 	_listener.add(net_debug_events.ev_lag_presets_requested, func() -> void: net_debug_events.ev_lag_presets.emit(_session.lag_preset_titles()))
 	_listener.add(net_debug_events.ev_lag_preset_selected, _on_lag_preset_selected)
 	_listener.add(sim_debug_events.ev_probe_requested, _on_probe_requested)
 	if _online:
-		debug_events.ev_panel_enabled.emit(net_debug_panel)
-	debug_events.ev_panel_enabled.emit(sim_debug_panel)
+		debug_events.ev_tab_enabled.emit(net_debug_tab)
+	debug_events.ev_tab_enabled.emit(sim_debug_tab)
 
 
 func _on_lag_preset_selected(index: int) -> void:

@@ -1,7 +1,7 @@
 class_name SimDebugPanel
 extends VBoxContainer
 
-## Debug dock tab for every match: the determinism probe runs a reference input log through
+## Debug panel tab for every match: the determinism probe runs a reference input log through
 ## the sim and shows whether the final hash matches the recorded one. The same result on PC and
 ## phone means both compute identically. Talks only through `SimDebugEvents`.
 
