@@ -25,7 +25,7 @@
 | Экраны по концептам: главная, «С другом», матч (HUD, пауза), итоги | `src/game/scenes/{menu,game,post_battle}/` |
 | Тач: левая половина — движение, правая — прыжок | `src/features/virtual_controls/` |
 | Панель отладки (кнопка «DBG» / F3, кроме релиза; окно двигается за заголовок): «Конфиги» всегда (физика, арена, правила: попробовать в бою, сбросить, сохранить новым дефолтом), «Способности» офлайн (время, мяч, автопилот), «Сеть» онлайн (ping, откаты, рассинхроны, FPS, эмуляция), «Симуляция» всегда (проверка детерминизма) | `src/game/scenes/debug_panel/` (вкладки — `panels/{config_debug,abilities_debug,net_debug,sim_debug}/`) |
-| Логи одной строкой по каналам (`app`, `menu`, `online`, `match`, `net`, `results`) | `core/lib/log/`, `src/common/log_settings.tres` |
+| Логи одной строкой по каналам (`app`, `menu`, `online`, `match`, `net`, `results`) | `core/lib/log/`, `src/common/log/log_settings.tres` |
 | Тесты: симуляция, детерминизм, откат, сцены, e2e двух процессов | `tests/` |
 | Сборки Windows и Android, CI | `export_presets.cfg`, `.github/workflows/build.yml` |
 
@@ -142,7 +142,7 @@ Android: `adb logcat -s godot` во время игры или `adb shell run-as
 Прямое соединение: `p2p_begin` → `p2p_ready ms=…` (открылось) или `p2p_timeout` / `p2p_unavailable` (матч через сервер), `p2p_closed`; в `session_setup`, `sync_started` и `net_health` поле `link=p2p|relay`.
 
 Что искать: `desync` (рассинхрон, WARN), `sync_lost` (с теми же полями, что `net_health`), `session_abort reason=...`, `opponent_left`,
-`room_*_failed`, `sign_in_failed` (нет связи с сервером). Уровни по каналам — `src/common/log_settings.tres`
+`room_*_failed`, `sign_in_failed` (нет связи с сервером). Уровни по каналам — `src/common/log/log_settings.tres`
 (редактор — DEBUG, debug-сборка — INFO, релиз — WARN).
 
 ## 7. Тесты
@@ -205,7 +205,7 @@ godot --headless --path . --script res://tests/e2e/nakama_peer.gd -- role=guest 
 | Задержка ввода и буфер отката | `src/features/match_session/net_tuning.tres` |
 | Пресеты эмуляции сети | `src/features/match_session/lag_profiles/` |
 | Адрес и ключ сервера по умолчанию | `src/features/nakama_room/online_config.tres` |
-| Уровни логов | `src/common/log_settings.tres` |
+| Уровни логов | `src/common/log/log_settings.tres` |
 
 После изменения физики пересчитай эталон детерминизма (раздел 7).
 

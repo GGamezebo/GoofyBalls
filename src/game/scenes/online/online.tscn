@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://src/game/scenes/online/online_events.tres" id="3_online_ev"]
 [ext_resource type="Resource" path="res://src/features/nakama_room/online_config.tres" id="4_cfg"]
 [ext_resource type="Script" uid="uid://bagol8xa25a7n" path="res://src/game/scenes/menu/friend_window.gd" id="5_pduff"]
-[ext_resource type="Resource" path="res://src/common/log_settings.tres" id="6_log"]
+[ext_resource type="Resource" path="res://src/common/log/log_settings.tres" id="6_log"]
 
 [node name="Online" type="Node" unique_id=732601100]
 script = ExtResource("1_online")

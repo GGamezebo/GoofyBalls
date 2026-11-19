@@ -18,7 +18,7 @@
 | `src/features/{name}/` | Изолированные фичи: `match_session` (сессии, настройки rollback, эмуляция сети), `court_view`, `buff_fx`, `nakama_room` (клиент Nakama, протокол комнаты, WebRTC), `virtual_controls`, `ai_opponent` |
 | `src/entities/{name}/` | Игровые сущности, собранные из общих компонентов: `blob`, `ball`. Друг друга не импортируют |
 | `src/entities/components/{name}/` | Общие компоненты сущностей, зависящие от игры: `floor_shadow`. Используются только сущностями |
-| `src/common/` | Общие ресурсы: пресеты физики, арены, правила, персонажи, `MatchSetup` |
+| `src/common/{name}/` | Общие ресурсы, по папке на смысл; скрипт класса лежит рядом со своими `.tres`, в корне пусто: `setups/` (состав матча: `MatchSetup`, `TeamSetup`, `SlotSetup`), `presets/` (пресеты физики, арены и правил: `PhysicsPreset`, `ArenaPreset`, `RuleSet`), `platform/` (`PlatformCaps`), `palette/` (цвета и имена команд: `TeamPalette`), `net/` (`NetLink`, `PeerTransport`), `log/` (`log_settings.tres`) |
 | `src/ui/` | Общий UI игры (нужен ≥2 экранам): `theme/` (`goofy_theme.tres` с вариантами `PrimaryButton`, `CardPanel` и др.), `components/` (кнопки, чипы, счётчики), `dialogs/` (модалки и шиты), `overlays/` (`loading_screen`), `backgrounds/` (`neon_background`). UI одного экрана лежит рядом с ним. Правило — `.claude/rules/ui.md` |
 | `src/game/account/` | Прогресс, статистика, сохранения |
 | `core/lib/` | Библиотеки без зависимостей от игры: `hfsm`, `event_listener`, `ResourceUtils`, `window_stack_manager`, `log`, `soft_ring`, `fsm` (из quizmatik; `fsm` переведён на `RefCounted` и умеет `restore_state`; `shackers` — когда понадобится) |
