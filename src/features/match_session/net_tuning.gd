@@ -29,6 +29,11 @@ extends Resource
 @export var unstable_notice_sec: float = 0.4
 ## Seconds to wait for the opponent's scene before giving up.
 @export var handshake_timeout_sec: float = 15.0
+## The direct (P2P) link is trusted only while both sides hear each other over it. Nothing heard
+## from the opponent over P2P for this long (ms), or the opponent says it hears nothing from us,
+## and messages go over the relay again (P2P keeps a copy as a probe to win the link back).
+## Above normal gaps between packets (inputs every tick), well below `max_ticks_to_regain_sync`.
+@export_range(200, 5000) var p2p_silence_ms: int = 1000
 
 
 func apply_to(sync_manager: Node) -> void:

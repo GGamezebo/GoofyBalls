@@ -67,6 +67,9 @@ func setup(slot_peers: Array[int], log_channel: LogChannel) -> bool:
 	if transport != null:
 		transport.receive() # drop late packets of the previous match
 	_adaptor.transport = transport
+	if tuning != null:
+		_adaptor.p2p_silence_ms = tuning.p2p_silence_ms
+	_adaptor.ev_link_changed.connect(_on_link_changed)
 	SyncManager.set_network_adaptor(_adaptor)
 	if tuning != null:
 		tuning.apply_to(SyncManager)
@@ -292,6 +295,15 @@ func _link_name() -> String:
 	if _adaptor == null or _remote_peers.is_empty():
 		return "relay"
 	return _adaptor.link_name(_remote_peers[0])
+
+
+## The direct link started or stopped carrying the match (the adaptor's liveness check).
+func _on_link_changed(peer_id: int, direct: bool) -> void:
+	var fields := {"peer": peer_id, "link": "p2p" if direct else "relay", "tick": SyncManager.current_tick}
+	if direct:
+		_log.info("link_changed", fields)
+	else:
+		_log.warn("link_changed", fields)
 
 
 func _on_sync_started() -> void:

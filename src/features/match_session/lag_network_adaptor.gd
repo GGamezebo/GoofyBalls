@@ -2,23 +2,38 @@ class_name LagNetworkAdaptor
 extends "res://addons/godot-rollback-netcode/RPCNetworkAdaptor.gd"
 
 ## Rollback network adaptor with two paths and optional network emulation:
-## - direct: a P2P `transport` (UDP) whenever it is ready for that peer;
+## - direct: a P2P `transport` (UDP) while it is ready AND alive for that peer;
 ## - relay: Godot RPCs over the multiplayer peer (Nakama relay = TCP) otherwise.
 ## Every message picks its path when it leaves, so a match keeps running if P2P comes up or
-## drops halfway. Emulation (debug builds) delays outgoing messages by `delay ± jitter` (order
-## kept), stalls them, and drops a share of input packets; pings are delayed too.
+## drops halfway. "Ready" only means the channels are open; the path behind them can still eat
+## every packet (seen on phones when ICE settles late). So the link counts as alive only while
+## both sides hear each other over it: a P2P packet arrived within `p2p_silence_ms` and it says
+## its sender hears us too (every P2P packet carries that flag). Until then messages go over the
+## relay and P2P carries a copy as a probe, which wins the link back once it works.
+## Emulation (debug builds) delays outgoing messages by `delay ± jitter` (order kept), stalls
+## them, and drops a share of input packets; pings are delayed too.
 ## Both peers must use this script (RPC methods are matched by node path and script).
+
+## The direct link to `peer_id` started (true) or stopped (false) carrying the match.
+signal ev_link_changed(peer_id: int, direct: bool)
 
 enum Kind { PING, PING_BACK, REMOTE_START, REMOTE_STOP, INPUT }
 
 var profile: LagProfile
 ## Direct link to the other peer; null or not ready = relay only.
 var transport: PeerTransport
+## Silence on the direct link (ms) after which it no longer counts as alive (`NetTuning`).
+var p2p_silence_ms: int = 1000
 
 var _sync_manager: Node
 var _queue: Array[Dictionary] = []
 var _last_due_ms: int = 0
 var _rng := RandomNumberGenerator.new()
+## Per peer: msec of the last P2P packet from it, whether it said it hears us, and whether the
+## direct link carried the match the last time a message left (to report changes once).
+var _heard_ms: Dictionary = {}
+var _hears_me: Dictionary = {}
+var _direct: Dictionary = {}
 
 
 func _ready() -> void:
@@ -36,7 +51,7 @@ func stop_network_adaptor(_sync_manager_arg) -> void:
 
 ## "p2p" when messages to this peer go over the direct link, else "relay".
 func link_name(peer_id: int) -> String:
-	return "p2p" if transport != null and transport.is_ready(peer_id) else "relay"
+	return "p2p" if _is_direct(peer_id) else "relay"
 
 
 ## A ping answer can arrive after the match stopped and SyncManager forgot the peer
@@ -103,10 +118,18 @@ func _flush() -> void:
 func _send_now(item: Dictionary) -> void:
 	var peer_id: int = item["peer"]
 	var kind := int(item["kind"])
+	var direct := _is_direct(peer_id)
+	if direct != bool(_direct.get(peer_id, false)):
+		_direct[peer_id] = direct
+		ev_link_changed.emit(peer_id, direct)
 	if transport != null and transport.is_ready(peer_id):
 		var reliable := kind == Kind.REMOTE_START or kind == Kind.REMOTE_STOP
-		if transport.send(peer_id, reliable, var_to_bytes([kind, item.get("msg")])):
-			return
+		# Start / stop must arrive once: over P2P only when it is proven, else over the relay only.
+		# Pings and inputs may arrive twice (both are idempotent), so they also probe the link.
+		if direct or not reliable:
+			var packet := var_to_bytes([kind, item.get("msg"), _hears(peer_id)])
+			if transport.send(peer_id, reliable, packet) and direct:
+				return
 	# Relay. The peer may already be gone (it left the room): an RPC to an unknown peer is an
 	# engine error, so skip it.
 	if not _is_connected(peer_id):
@@ -129,9 +152,11 @@ func _receive_direct() -> void:
 		return
 	for packet in transport.receive():
 		var decoded = bytes_to_var(packet[1])
-		if not (decoded is Array and decoded.size() == 2):
+		if not (decoded is Array and decoded.size() == 3):
 			continue
 		var peer_id: int = packet[0]
+		_heard_ms[peer_id] = Time.get_ticks_msec()
+		_hears_me[peer_id] = bool(decoded[2])
 		match int(decoded[0]):
 			Kind.PING:
 				received_ping.emit(peer_id, decoded[1])
@@ -143,6 +168,16 @@ func _receive_direct() -> void:
 				received_remote_stop.emit()
 			Kind.INPUT:
 				received_input_tick.emit(peer_id, decoded[1])
+
+
+## We got a P2P packet from `peer_id` recently: told to it in every P2P packet we send.
+func _hears(peer_id: int) -> bool:
+	return _heard_ms.has(peer_id) and Time.get_ticks_msec() - int(_heard_ms[peer_id]) <= p2p_silence_ms
+
+
+## The direct link carries the match: open, and both sides hear each other over it.
+func _is_direct(peer_id: int) -> bool:
+	return transport != null and transport.is_ready(peer_id) and _hears(peer_id) and bool(_hears_me.get(peer_id, false))
 
 
 func _deliver_ping_back(peer_id: int, msg: Dictionary) -> void:

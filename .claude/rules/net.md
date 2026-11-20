@@ -5,7 +5,7 @@ paths:
 ---
 # Online / server
 - Clients send inputs only `{x:-100..100, j, a}`; never positions/score.
-- MatchSession: Local | Rollback (SyncManager; transport per message: P2P if ready, else Nakama relay). No authoritative / headless server sim, ever — don't design for it. Game code session-agnostic.
+- MatchSession: Local | Rollback (SyncManager; transport per message: P2P while alive — open AND both sides heard each other over it within `NetTuning.p2p_silence_ms`, every P2P packet carries "I hear you" — else Nakama relay with a P2P probe copy; never trust "open" alone). No authoritative / headless server sim, ever — don't design for it. Game code session-agnostic.
 - Friend rooms: rollback traffic over WebRTC P2P (UDP, `WebRTCTransport`, webrtc-native GDExtension); signaling, room RPCs and fallback over the relay. P2P link reaches the battle via `NetLink` (.tres).
 - Server is thin (friends-first game): room codes, match seed, relay, later matchmaking + stored ratings. It never runs or checks the game: no input log, no server tick numbering, no replay validation, no anti-cheat.
 - Result + rating: every client of the match reports the final score; equal reports → rating applied, any mismatch or missing report → match not rated. Plain Elo (2×2: team average, same change for both). Collusion/cheating is accepted.
