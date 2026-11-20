@@ -1,0 +1,75 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/net_debug/net_debug_panel.gd" id="1_no"]
+[ext_resource type="Script" path="res://src/features/match_session/lag_profile.gd" id="2_lp"]
+[ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_none.tres" id="3_l0"]
+[ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_wifi.tres" id="4_l1"]
+[ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_4g.tres" id="5_l2"]
+[ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_bad.tres" id="6_l3"]
+[ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_spikes.tres" id="7_l4"]
+[ext_resource type="Resource" path="res://src/features/match_session/lag_profiles/lag_freeze.tres" id="8_l5"]
+
+[node name="NetDebugPanel" type="VBoxContainer" node_paths=PackedStringArray("stats_label", "lag_buttons")]
+theme_override_constants/separation = 10
+script = ExtResource("1_no")
+stats_label = NodePath("Stats")
+lag_buttons = [NodePath("Lag/Lag0"), NodePath("Lag/Lag1"), NodePath("Lag/Lag2"), NodePath("Lag/Lag3"), NodePath("Lag/Lag4"), NodePath("Lag/Lag5")]
+lag_presets = Array[ExtResource("2_lp")]([ExtResource("3_l0"), ExtResource("4_l1"), ExtResource("5_l2"), ExtResource("6_l3"), ExtResource("7_l4"), ExtResource("8_l5")])
+
+[node name="Stats" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Офлайн"
+
+[node name="LagTitle" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 22
+text = "Эмуляция плохой сети (наш исходящий трафик):"
+autowrap_mode = 3
+
+[node name="Lag" type="GridContainer" parent="."]
+layout_mode = 2
+columns = 2
+
+[node name="Lag0" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag1" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag2" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag3" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag4" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"
+
+[node name="Lag5" type="Button" parent="Lag"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 20
+text = "—"

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="BlobJellyConfig" format=3]
+
+[ext_resource type="Script" path="res://src/entities/blob/blob_jelly_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+ring_points = 20
+wobble_hz = 3.2
+wobble_damping = 0.2
+tension = 0.35
+min_offset = -0.5
+max_offset = 0.6
+substeps = 2
+max_step_sec = 0.03333333333333333
+rest_flatten = 0.94
+stretch_per_mps = 0.022
+max_stretch = 1.3
+stretch_min_mps = 0.5
+lean_per_mps = 0.02
+lean_height_bias = 0.3
+land_per_mps = 0.2
+land_bulge = 0.8
+land_top_share = 0.7
+hit_dent = 2.4
+hit_bulge = 0.5
+wall_flatten = 0.72
+cling_kick = 1.2
+cling_bulge = 0.6
+goo_reach = 0.22
+goo_width = 0.1
+goo_sec = 0.12
+goo_spacing = 0.45
+goo_root_inset = 0.9
+goo_droop = 0.06

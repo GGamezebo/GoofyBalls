@@ -1,0 +1,217 @@
+extends IScene
+
+## Battle context — orchestration only: MatchSetup → sim → session (local or rollback) →
+## inputs → view → HUD (via GameEvents only, no reference) → result (`root_events.ev_exit_game`).
+## F6: plays the exported default setup (vs AI) on its own.
+
+@export var root_events: RootEvents
+@export var game_events: GameEvents
+@export var default_setup: MatchSetup
+@export var palette: TeamPalette
+@export var log_settings: LogSettings
+@export var net_tuning: NetTuning
+## How bots play (balance knobs).
+@export var ai_profile: AiProfile
+## Direct link to the opponent, put there by App/Online (null = relay only).
+@export var net_link: NetLink
+@export var match_view: MatchView
+@export var session_parent: Node
+## Keep showing the final rally this long before the results screen.
+@export var end_linger_ticks: int = 120
+@export var abort_delay_sec: float = 2.0
+
+var _setup: MatchSetup
+var _sim := VolleySim.new()
+var _session: MatchSession
+var _inputs: MatchInputs
+var _listener := EventListener.new()
+var _log: LogChannel
+var _online: bool = false
+var _finished: bool = false
+## Holds points / match end back until their tick can no longer be rolled back.
+var _gate: MatchEventGate
+
+
+func initialize(data: Dictionary) -> void:
+	_log = LogChannel.new("match", log_settings)
+	var payload_setup := data.get("match_setup") as MatchSetup
+	_setup = payload_setup if payload_setup != null else default_setup.duplicate(true)
+	if payload_setup == null:
+		_setup.match_seed = randi()
+	_sim.reset(_setup.to_sim_config())
+	_gate = MatchEventGate.new(_sim)
+
+	var my_id := multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 0
+	_online = _setup.has_remote_peers(my_id)
+	_inputs = MatchInputs.new(_setup, my_id, _sim, ai_profile)
+
+	var transport: PeerTransport = net_link.transport if net_link != null else null
+	_session = MatchSessionFactory.create(_online, net_tuning, transport)
+	_session.name = "Session"
+	session_parent.add_child(_session)
+	_session.bind_sim(_inputs.slot_count(), _inputs.sample, _step, _sim.save_state, _sim.load_state, VolleySim.neutral_input())
+	_listener.add(_session.ev_started, _on_session_started)
+	_listener.add(_session.ev_ticked, _on_ticked)
+	_listener.add(_session.ev_rolled_back, _on_rolled_back)
+	_listener.add(_gate.ev_point, _on_point_confirmed)
+	_listener.add(_gate.ev_match_over, _on_match_over_confirmed)
+	_listener.add(_session.ev_status, func(text: String) -> void: game_events.ev_status.emit(text))
+	_listener.add(_session.ev_stopped, _on_session_stopped)
+	_listener.add(_session.ev_aborted, _on_session_aborted)
+
+	_listener.add(game_events.ev_pause_requested, func() -> void: _session.set_paused(true))
+	_listener.add(game_events.ev_resume_requested, func() -> void: _session.set_paused(false))
+	_listener.add(game_events.ev_exit_requested, _on_exit_requested)
+
+	var local_slots := _inputs.local_slots()
+	match_view.setup(_sim, _setup, local_slots)
+	game_events.ev_match_started.emit(_match_info(local_slots))
+
+	_log.info("match_start", {
+		"mode": _mode_name(), "seed": _setup.match_seed, "players": _sim.player_count(),
+		"teams": _sim.team_count(), "me": my_id,
+	})
+	var slot_peers: Array[int] = []
+	for slot in _setup.slots():
+		slot_peers.append(slot.peer_id)
+	_session.setup(slot_peers, LogChannel.new("net", log_settings))
+
+
+func deinit() -> void:
+	if _session != null:
+		if _finished:
+			_session.shutdown()
+		else:
+			_session.leave()
+	_listener.deinit()
+	super.deinit()
+
+
+func _step(inputs: Array) -> int:
+	_sim.step(inputs)
+	return _sim.state.tick
+
+
+func _process(_delta: float) -> void:
+	if _session == null or _finished:
+		return
+	_gate.release(_session.confirmed_tick())
+	if _gate.is_over_confirmed() and _sim.state.phase_ticks >= end_linger_ticks:
+		_finish(false, MatchSession.AbortReason.NONE)
+
+
+func _on_ticked(tick: int) -> void:
+	match_view.capture(tick)
+	_gate.on_ticked(tick)
+
+
+func _on_rolled_back(_ticks: int) -> void:
+	match_view.on_rolled_back()
+	var undone := _gate.on_rolled_back()
+	if undone > 0:
+		_log.debug("point_rolled_back", {"count": undone, "tick": _sim.state.tick})
+
+
+func _on_point_confirmed(team: int, reason: int, scores: Array, tick: int) -> void:
+	game_events.ev_score_changed.emit(scores)
+	game_events.ev_point.emit(team, reason)
+	_log.info("point", {"team": team, "score": ":".join(scores.map(func(v): return str(v))),
+		"reason": reason, "tick": tick})
+
+
+func _on_match_over_confirmed(winner_team: int, tick: int) -> void:
+	_log.info("match_over", {"winner": winner_team, "tick": tick})
+	game_events.ev_match_over.emit(winner_team)
+
+
+func _on_session_started() -> void:
+	_log.info("session_started", {"online": _online})
+	game_events.ev_status.emit("")
+
+
+func _on_session_stopped() -> void:
+	# Online guest: the host already saw the final confirmed tick and stopped the match.
+	if _finished:
+		return
+	if _sim.is_match_over():
+		_finish(false, MatchSession.AbortReason.NONE)
+	else:
+		_abort(MatchSession.AbortReason.STOPPED)
+
+
+func _on_session_aborted(reason: MatchSession.AbortReason) -> void:
+	_abort(reason)
+
+
+func _abort(reason: MatchSession.AbortReason) -> void:
+	if _finished:
+		return
+	_log.warn("match_abort", {"reason": MatchSession.abort_reason_name(reason), "tick": _sim.state.tick})
+	game_events.ev_status.emit(MatchSession.abort_reason_text(reason))
+	_finished = true
+	_session.shutdown()
+	await get_tree().create_timer(abort_delay_sec).timeout
+	if not is_inside_tree():
+		return
+	root_events.ev_exit_game.emit(_build_result(true, reason))
+
+
+func _finish(aborted: bool, reason: MatchSession.AbortReason) -> void:
+	_finished = true
+	_session.shutdown()
+	var result := _build_result(aborted, reason)
+	_log.info("match_end", {"winner": result["winner_team"], "score": ":".join(result["scores"].map(func(v): return str(v))),
+		"ticks": _sim.state.tick})
+	root_events.ev_exit_game.emit(result)
+
+
+func _on_exit_requested() -> void:
+	if _finished:
+		return
+	_finished = true
+	_log.info("match_exit_by_player", {"tick": _sim.state.tick})
+	_session.leave()
+	# Back to the menu closes an online room by itself (HFSM App/Online/Room).
+	root_events.ev_return_to_menu.emit({})
+
+
+func _build_result(aborted: bool, reason: MatchSession.AbortReason) -> Dictionary:
+	return {
+		"match_setup": _setup,
+		"scores": _sim.state.scores.duplicate(),
+		"winner_team": _sim.state.winner_team,
+		"local_teams": _local_teams(_inputs.local_slots()),
+		"team_names": _team_names(),
+		"online": _online,
+		"aborted": aborted,
+		"reason": reason,
+	}
+
+
+func _match_info(local_slots: Array[int]) -> Dictionary:
+	return {"team_names": _team_names(), "local_teams": _local_teams(local_slots), "online": _online}
+
+
+func _team_names() -> Array:
+	var names: Array = []
+	for team in _setup.teams:
+		var slot_names: Array = []
+		for slot in team.slots:
+			slot_names.append(slot.display_name)
+		names.append(", ".join(slot_names))
+	return names
+
+
+func _local_teams(local_slots: Array[int]) -> Array:
+	var teams: Array = []
+	for slot in local_slots:
+		var team := _setup.slot_team(slot)
+		if not teams.has(team):
+			teams.append(team)
+	return teams
+
+
+func _mode_name() -> String:
+	if _online:
+		return "online"
+	return "local_2p" if _setup.local_human_count() > 1 else "vs_ai"

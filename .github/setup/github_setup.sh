@@ -17,9 +17,10 @@ done < .github/labels.yml
 # Milestones from docs/roadmap.md iterations (existing ones are skipped)
 mk() { gh api "repos/$REPO/milestones" -f title="$1" -f description="$2" >/dev/null || true; }
 mk "Iteration 1 - Network slice" "Smooth 1x1 over the internet: quizmatik skeleton, volley_sim (Classic, arena S), one blob, vs AI, local 2P on PC, room by code via self-hosted Nakama relay, rollback, net overlay, lag emulation, Windows + Android builds, determinism and e2e tests"
-mk "Iteration 2 - Chaos" "Modifier, BuffBase, BuffRegistry, EnvDirector, Action button and self_destruct; first pickups, env events, two characters with passives; all online under rollback"
-mk "Iteration 3 - Look and feel" "Jelly blob, glow check in Compatibility, camera FX, buff visuals, HUD, sound, touch polish"
-mk "Iteration 4 - Online for everyone" "Hosted Nakama, platform sign-in, guest + soft save, rated queue (Glicko-2), ranks, leaderboards, reconnect, web build"
+mk "Iteration 2 - Physics" "Designer's movement doc (concept/movement.pdf): fall gravity and fall speed cap, apex hang, split accel/decel/friction on floor and in air, wall jump grace and wall friction; Classic tuned live in the Configs debug tab; online without desyncs"
+mk "Iteration 3 - Chaos" "Modifier, BuffBase, BuffRegistry, EnvDirector, Action button and self_destruct; first pickups, env events, two characters with passives; all online under rollback"
+mk "Iteration 4 - Look and feel" "Jelly blob, glow check in Compatibility, camera FX, buff visuals, HUD, sound, touch polish"
+mk "Iteration 5 - Online for everyone" "Hosted Nakama, platform sign-in, guest + soft save, rated queue (Glicko-2), ranks, leaderboards, reconnect, web build"
 
 # Protect main: PR only, no force push, no deletion
 gh api -X PUT "repos/$REPO/branches/main/protection" --input - <<JSON

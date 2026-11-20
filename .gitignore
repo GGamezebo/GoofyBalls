@@ -29,3 +29,14 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Public CI debug keystore (password "android") — intentionally committed
+!ci/debug.keystore
+
+# Export output
+/bin/
+
+# Developer's own Nakama address baked into local builds (see online_local.tres.example)
+/online_local.tres
+# Editor hot-reload copies of GDExtension libraries
+addons/*/lib/~*

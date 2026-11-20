@@ -8,6 +8,6 @@ paths:
 - Signals `ev_*`; subscribe via `EventListener`, tear down in `deinit`/`_exit_tree`.
 - Wire deps with `@export`; config copies via `ResourceUtils.update_resource()`.
 - Pure logic → `RefCounted`; Nodes stay thin.
-- UI built in the editor; repeated items = template `.tscn` + `instantiate()`; no `Label.new()` trees. Window roots get `theme = core/theme/style.tres`.
+- UI built in the editor; repeated items = template `.tscn` + `instantiate()`; no `Label.new()` trees. Game theme = `src/ui/theme/goofy_theme.tres`, set in `project.godot` (`gui/theme/custom`); scene roots may also set it for the editor preview. Shared UI rules: `ui.md`.
 - InputMap actions only (`move_left/right`, `jump`, `action`); keep touch working.
 - Avoid: autoloads for flow, cross-context refs, project types in `core/`, drive-by renames, editing `addons/`.
