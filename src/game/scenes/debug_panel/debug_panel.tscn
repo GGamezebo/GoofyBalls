@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/debug_panel.gd" id="1_dbg"]
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/debug_tab_def.gd" id="2_def"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/config_debug/configs_tab.tres" id="5_cfg"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/abilities_debug/abilities_tab.tres" id="8_abil"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/online_abilities_debug/online_abilities_tab.tres" id="12_oabil"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/net_debug/net_tab.tres" id="9_net"]
+[ext_resource type="Resource" path="res://src/game/scenes/debug_panel/panels/sim_debug/sim_tab.tres" id="10_sim"]
+[ext_resource type="Resource" path="res://src/common/log/log_settings.tres" id="3_log"]
+[ext_resource type="Theme" path="res://src/ui/theme/goofy_theme.tres" id="4_th"]
+[ext_resource type="Theme" path="res://src/game/scenes/debug_panel/debug_theme.tres" id="11_dth"]
+
+[node name="DebugPanel" type="Node" node_paths=PackedStringArray("open_button", "window", "title_bar", "close_button", "tabs", "empty_label")]
+script = ExtResource("1_dbg")
+tab_defs = Array[ExtResource("2_def")]([ExtResource("5_cfg"), ExtResource("8_abil"), ExtResource("12_oabil"), ExtResource("9_net"), ExtResource("10_sim")])
+log_settings = ExtResource("3_log")
+open_button = NodePath("Layer/Root/OpenButton")
+window = NodePath("Layer/Root/Window")
+title_bar = NodePath("Layer/Root/Window/Box/TitleBar/Title")
+close_button = NodePath("Layer/Root/Window/Box/TitleBar/Close")
+tabs = NodePath("Layer/Root/Window/Box/Tabs")
+empty_label = NodePath("Layer/Root/Window/Box/Empty")
+
+[node name="Layer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="Root" type="Control" parent="Layer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("4_th")
+
+[node name="OpenButton" type="Button" parent="Layer/Root"]
+modulate = Color(1, 1, 1, 0.7)
+layout_mode = 0
+offset_left = 120.0
+offset_top = 16.0
+offset_right = 208.0
+offset_bottom = 104.0
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 24
+text = "DBG"
+
+[node name="Window" type="PanelContainer" parent="Layer/Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -724.0
+offset_top = 110.0
+offset_right = -24.0
+offset_bottom = 860.0
+grow_horizontal = 0
+theme = ExtResource("11_dth")
+theme_type_variation = &"PillPanel"
+
+[node name="Box" type="VBoxContainer" parent="Layer/Root/Window"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleBar" type="HBoxContainer" parent="Layer/Root/Window/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Layer/Root/Window/Box/TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+mouse_default_cursor_shape = 13
+theme_override_colors/font_color = Color(1, 0.8235, 0.0392, 1)
+theme_override_font_sizes/font_size = 26
+text = "Отладка (F3)"
+
+[node name="Close" type="Button" parent="Layer/Root/Window/Box/TitleBar"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 24
+text = "×"
+
+[node name="Empty" type="Label" parent="Layer/Root/Window/Box"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 22
+text = "Здесь отладочных панелей нет."
+autowrap_mode = 3
+
+[node name="Tabs" type="TabContainer" parent="Layer/Root/Window/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 22

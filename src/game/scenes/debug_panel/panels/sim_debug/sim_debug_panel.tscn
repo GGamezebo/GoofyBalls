@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/sim_debug/sim_debug_panel.gd" id="1_sd"]
+[ext_resource type="Resource" uid="uid://b4ijkb7pf2gro" path="res://src/game/scenes/game/volley_sim/determinism_probe.tres" id="2_probe"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/widgets/debug_header/debug_header.tscn" id="3_hd"]
+
+[node name="SimDebugPanel" type="VBoxContainer" node_paths=PackedStringArray("header", "live_label", "probe_button", "probe_label")]
+theme_override_constants/separation = 10
+script = ExtResource("1_sd")
+header = NodePath("DebugHeader")
+live_label = NodePath("Live")
+probe = ExtResource("2_probe")
+probe_button = NodePath("Probe")
+probe_label = NodePath("ProbeResult")
+
+[node name="DebugHeader" parent="." instance=ExtResource("3_hd")]
+layout_mode = 2
+
+[node name="LiveTitle" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Состояние боя"
+
+[node name="Live" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Боя нет."
+autowrap_mode = 3
+
+[node name="ProbeTitle" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Детерминизм"
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 18
+text = "Эталонный лог ввода через симуляцию: на ПК и телефоне хеш должен совпасть с эталоном."
+autowrap_mode = 3
+
+[node name="Probe" type="Button" parent="."]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "Проверить детерминизм"
+
+[node name="ProbeResult" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3

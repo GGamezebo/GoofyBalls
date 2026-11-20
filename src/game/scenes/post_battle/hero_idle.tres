@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BlobIdleConfig" format=3]
+
+[ext_resource type="Script" path="res://src/entities/blob/idle/blob_idle_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+period_sec = 1.2566371
+hop_px = 30.0
+peak_speed = 6.0

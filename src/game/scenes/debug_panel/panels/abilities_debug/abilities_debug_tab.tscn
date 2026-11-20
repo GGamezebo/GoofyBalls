@@ -1,0 +1,173 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/abilities_debug/abilities_debug_tab.gd" id="1_tab"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/panels/abilities_debug/drop_button.tscn" id="2_drop"]
+[ext_resource type="PackedScene" path="res://src/game/scenes/debug_panel/widgets/debug_header/debug_header.tscn" id="3_hd"]
+
+[node name="AbilitiesDebugTab" type="VBoxContainer" node_paths=PackedStringArray("header", "speed_buttons", "status_label", "pause_button", "step_button", "ball_to_me_button", "hang_toggle", "trampoline_toggle", "autopilot_toggle", "drop_box", "restart_button")]
+theme_override_constants/separation = 8
+script = ExtResource("1_tab")
+header = NodePath("DebugHeader")
+speed_buttons = [NodePath("Scroll/Box/Speeds/Speed0"), NodePath("Scroll/Box/Speeds/Speed1"), NodePath("Scroll/Box/Speeds/Speed2"), NodePath("Scroll/Box/Speeds/Speed3"), NodePath("Scroll/Box/Speeds/Speed4"), NodePath("Scroll/Box/Speeds/Speed5")]
+status_label = NodePath("Status")
+pause_button = NodePath("Scroll/Box/TimeRow/Pause")
+step_button = NodePath("Scroll/Box/TimeRow/Step")
+ball_to_me_button = NodePath("Scroll/Box/BallToMe")
+hang_toggle = NodePath("Scroll/Box/Hang")
+trampoline_toggle = NodePath("Scroll/Box/Trampoline")
+autopilot_toggle = NodePath("Scroll/Box/Autopilot")
+drop_box = NodePath("Scroll/Box/Drops")
+drop_template = ExtResource("2_drop")
+restart_button = NodePath("Scroll/Box/Restart")
+
+[node name="DebugHeader" parent="." instance=ExtResource("3_hd")]
+layout_mode = 2
+
+[node name="Status" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8235, 0.0392, 1)
+theme_override_font_sizes/font_size = 20
+text = "×1 · тик 0"
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Box" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TimeTitle" type="Label" parent="Scroll/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Время"
+
+[node name="Speeds" type="GridContainer" parent="Scroll/Box"]
+layout_mode = 2
+columns = 3
+
+[node name="Speed0" type="Button" parent="Scroll/Box/Speeds"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "×1"
+
+[node name="Speed1" type="Button" parent="Scroll/Box/Speeds"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "×1"
+
+[node name="Speed2" type="Button" parent="Scroll/Box/Speeds"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "×1"
+
+[node name="Speed3" type="Button" parent="Scroll/Box/Speeds"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "×1"
+
+[node name="Speed4" type="Button" parent="Scroll/Box/Speeds"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "×1"
+
+[node name="Speed5" type="Button" parent="Scroll/Box/Speeds"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "×1"
+
+[node name="TimeRow" type="HBoxContainer" parent="Scroll/Box"]
+layout_mode = 2
+
+[node name="Pause" type="Button" parent="Scroll/Box/TimeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+toggle_mode = true
+text = "Пауза"
+
+[node name="Step" type="Button" parent="Scroll/Box/TimeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "Шаг: +1 тик"
+
+[node name="BallTitle" type="Label" parent="Scroll/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Мяч"
+
+[node name="BallToMe" type="Button" parent="Scroll/Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "Мяч ко мне (над моим блобом)"
+
+[node name="Hang" type="CheckButton" parent="Scroll/Box"]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "Подвесить мяч (до касания)"
+
+[node name="Trampoline" type="CheckButton" parent="Scroll/Box"]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "Пол-батут: розыгрыш не кончается на полу"
+
+[node name="PlayersTitle" type="Label" parent="Scroll/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Игроки"
+
+[node name="Autopilot" type="CheckButton" parent="Scroll/Box"]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "Автопилот: бот играет за меня"
+
+[node name="MatchTitle" type="Label" parent="Scroll/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Матч"
+
+[node name="Drops" type="HFlowContainer" parent="Scroll/Box"]
+layout_mode = 2
+
+[node name="Restart" type="Button" parent="Scroll/Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"GhostButton"
+theme_override_font_sizes/font_size = 18
+text = "Перезапустить матч"
