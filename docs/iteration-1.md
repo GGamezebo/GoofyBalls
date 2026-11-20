@@ -24,7 +24,7 @@
 | Прямое соединение игроков в комнате: UDP через WebRTC (P2P), запасной путь — relay | `src/features/nakama_room/webrtc_transport.gd`, `addons/webrtc_native`, `src/common/net/` |
 | Экраны по концептам: главная, «С другом», матч (HUD, пауза), итоги | `src/game/scenes/{menu,game,post_battle}/` |
 | Тач: левая половина — движение, правая — прыжок | `src/features/virtual_controls/` |
-| Панель отладки (кнопка «DBG» / F3, кроме релиза; окно двигается за заголовок): «Конфиги» всегда (физика, арена, правила: попробовать в бою, сбросить, сохранить новым дефолтом), «Способности» офлайн (время, мяч, автопилот), «Сеть» онлайн (ping, откаты, рассинхроны, FPS, эмуляция), «Симуляция» всегда (проверка детерминизма) | `src/game/scenes/debug_panel/` (вкладки — `panels/{config_debug,abilities_debug,net_debug,sim_debug}/`) |
+| Панель отладки (кнопка «DBG» / F3, кроме релиза; окно двигается за заголовок): «Конфиги» всегда (физика, арена, правила: попробовать в бою, сбросить, сохранить новым дефолтом), «Способности» офлайн (время, мяч, автопилот), онлайн — только автопилот (бот шлёт свой ввод как игрок, синхронизация не ломается), «Сеть» онлайн (ping, откаты, рассинхроны, FPS, эмуляция), «Симуляция» всегда (проверка детерминизма) | `src/game/scenes/debug_panel/` (вкладки — `panels/{config_debug,abilities_debug,online_abilities_debug,net_debug,sim_debug}/`) |
 | Логи одной строкой по каналам (`app`, `menu`, `online`, `match`, `net`, `results`) | `core/lib/log/`, `src/common/log/log_settings.tres` |
 | Тесты: симуляция, детерминизм, откат, сцены, e2e двух процессов | `tests/` |
 | Сборки Windows и Android, CI | `export_presets.cfg`, `.github/workflows/build.yml` |

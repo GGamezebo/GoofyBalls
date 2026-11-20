@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/game/scenes/debug_panel/panels/online_abilities_debug/online_abilities_debug_tab.gd" id="1_tab"]
+
+[node name="OnlineAbilitiesDebugTab" type="VBoxContainer" node_paths=PackedStringArray("autopilot_toggle")]
+theme_override_constants/separation = 8
+script = ExtResource("1_tab")
+autopilot_toggle = NodePath("Autopilot")
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Онлайн: только то, что не ломает синхронизацию"
+autowrap_mode = 3
+
+[node name="Autopilot" type="CheckButton" parent="."]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "Автопилот: бот играет за меня"

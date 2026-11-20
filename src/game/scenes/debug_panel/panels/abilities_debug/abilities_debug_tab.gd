@@ -12,7 +12,8 @@ extends DebugTab
 ## autopilot) and keeps the choices for when it is on again; "Сбросить" clears the choices.
 ## Works by wrapping the session's `_sample` / `_step` callables and editing `SimState` between
 ## ticks; `detach` undoes it all. Speed, trampoline and autopilot carry over to the next battle.
-## Online battles get no such tab: every change would desync the match.
+## Online battles get `OnlineAbilitiesDebugTab` instead (autopilot only): every other change here
+## would desync the match.
 
 ## "Включено" + "Сбросить".
 @export var header: DebugHeader
